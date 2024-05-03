@@ -44,4 +44,6 @@
     </string>
     <string name="medicine">Medicine</string>
     <string name="farmacies">Farmacies</string>
+    <string name="available_in">Available in:</string>
+    <string name="favorite">favorite</string>
 </resources>

@@ -13,20 +13,29 @@
         android:theme="@style/Theme.PharmacIST"
         tools:targetApi="31">
         <activity
-            android:name=".Farmacies"
+            android:name=".Register"
             android:exported="false" />
         <activity
-            android:name=".Medicine"
-            android:exported="false"
-            android:theme="@style/Theme.PharmacIST" />
-        <activity
-            android:name=".MainActivity"
+            android:name=".Login"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".medicine.MedicineDetails"
+            android:exported="false" />
+        <activity
+            android:name=".farmacies.Farmacies"
+            android:exported="false" />
+        <activity
+            android:name=".medicine.Medicine"
+            android:exported="false"
+            android:theme="@style/Theme.PharmacIST" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

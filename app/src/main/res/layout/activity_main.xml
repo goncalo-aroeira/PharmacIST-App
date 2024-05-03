@@ -1,53 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="10dp"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/button_menu1"
-        android:layout_width="342dp"
-        android:layout_height="97dp"
-        android:layout_marginStart="23dp"
-        android:layout_marginEnd="23dp"
-        android:layout_marginBottom="191dp"
-        android:text="@string/farmacies"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_menu2" />
+    <TextView
+        android:id="@+id/tvWelcomeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 
     <Button
-        android:id="@+id/button_menu2"
-        android:layout_width="342dp"
-        android:layout_height="97dp"
-        android:layout_marginStart="23dp"
-        android:layout_marginTop="470dp"
-        android:layout_marginEnd="23dp"
-        android:layout_marginBottom="32dp"
-        android:text="@string/medicine"
-        app:layout_constraintBottom_toTopOf="@+id/button_menu1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.478"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/btnFarmacy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/farmacies" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
+    <Button
+        android:id="@+id/btnMedicine"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/medicine" />
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="20dp" />
+        android:id="@+id/btnLogout"
+        android:layout_gravity="center"
+        android:text="Logout" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="20dp" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
