@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.content.Context;
 import android.content.SharedPreferences;
