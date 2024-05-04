@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "622652757323",
+    "project_id": "pharmacist-2024",
+    "storage_bucket": "pharmacist-2024.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:622652757323:android:9f5380491e778803e284ce",
+        "android_client_info": {
+          "package_name": "pt.ulisboa.tecnico.cmov.pharmacist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCi3JB1QTMGNlR0AGwR83vFQsG4T9Fzmnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
