@@ -1,36 +1,66 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.util.Log;
+
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class PharmacyManager {
 
-    ArrayList<Pharmacy> pharmacies;
+    ArrayList<Pharmacy> pharmacies = new ArrayList<Pharmacy>();
+    FirebaseDBHandler dbHandler;
 
-    public PharmacyManager() {
+    public PharmacyManager(FirebaseDBHandler dbHandler) {
+        this.dbHandler = dbHandler;
         this.pharmacies = new ArrayList<>();
     }
 
-    public PharmacyManager(List<Pharmacy> pharmacies) {
-        this.pharmacies = new ArrayList<>(pharmacies); // Defensive copy to avoid modifying original list
+    public void loadPharmacies(OnPharmaciesLoadedListener listener) {
+        this.dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                setPharmacies(pharmacies);
+                Log.d("Debug", "PharmacyManager: " + pharmacies.size() + " pharmacies loaded.");
+                listener.onPharmaciesLoaded(pharmacies);
+
+            }
+
+            @Override
+            public void onPharmaciesLoadFailed(Exception e) {
+                Log.e("Error", "Failed to load pharmacies", e);
+                listener.onPharmaciesLoadFailed(e);
+            }
+        });
     }
 
-    public List<Pharmacy> getPharmacies() {
-        return new ArrayList<>(pharmacies); // Defensive copy to avoid modifying original list
+    public ArrayList<Pharmacy> getPharmacies() {
+        return pharmacies;
     }
 
-    public void setPharmacies(List<Pharmacy> pharmacies) {
-        this.pharmacies = new ArrayList<>(pharmacies); // Defensive copy to avoid modifying original list
+    private void setPharmacies(ArrayList<Pharmacy> pharmacies) {
+        this.pharmacies = pharmacies;
     }
 
     // Method to manage pharmacies (can be named appropriately)
     public void addPharmacy(Pharmacy pharmacy) {
+        this.dbHandler.addPharmacy(pharmacy);
         pharmacies.add(pharmacy);
+
     }
 
     public void removePharmacy(Pharmacy pharmacy) {
+        this.dbHandler.removePharmacy(pharmacy.getName());
         pharmacies.remove(pharmacy);
+    }
+
+    public Pharmacy getPharmacyByName(String name) {
+        return pharmacies.stream().filter(pharmacy -> pharmacy.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public interface OnPharmaciesLoadedListener {
+        void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
+
+        void onPharmaciesLoadFailed(Exception e);
     }
 
 }

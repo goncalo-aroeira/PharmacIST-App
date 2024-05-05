@@ -9,21 +9,18 @@ public class Pharmacy {
 
     String name;
     String address; // Missing location on map
-    Boolean isFavorite;
     ImageView picture;
     private Map<Medicine, Integer> inventory;
 
     public Pharmacy(String name, String address, Boolean isFavorite, ImageView image) {
         this.name = name;
         this.address = address;
-        this.isFavorite = isFavorite;
         this.picture = image;
     }
 
     public Pharmacy(String name, String address) {
         this.name = name;
         this.address = address;
-        this.isFavorite = false;
         this.picture = null;
     }
 
@@ -37,14 +34,6 @@ public class Pharmacy {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public Boolean getIsFavorite() {
-        return isFavorite;
-    }
-
-    public void setIsFavorite(Boolean isFavorite) {
-        this.isFavorite = isFavorite;
     }
 
     public ImageView getPicture() {
