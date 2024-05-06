@@ -23,7 +23,6 @@ public class UserLocalStore {
     public void storeUserData(@NonNull User user) {
         SharedPreferences.Editor spEditor = userLocalDatabase.edit();
         spEditor.putString("name", user.name);
-        spEditor.putString("username", user.username);
         spEditor.putString("password", user.password);
         spEditor.apply();
         spEditor.commit();
@@ -32,10 +31,9 @@ public class UserLocalStore {
     // return the user that logged in
     public User getLoggedInUser() {
         String name = userLocalDatabase.getString("name", "");
-        String username = userLocalDatabase.getString("username", "");
         String password = userLocalDatabase.getString("password", "");
 
-        return new User(name, username, password);
+        return new User(name, password);
     }
 
     // return boolean to verify in user in logged in yet

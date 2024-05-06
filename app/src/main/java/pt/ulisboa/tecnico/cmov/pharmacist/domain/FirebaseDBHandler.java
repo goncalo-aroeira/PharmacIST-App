@@ -129,9 +129,68 @@ public class FirebaseDBHandler {
     }
 
 
-    public void addUser(String userId, User user) {
+    public void addUser(User user) {
         DatabaseReference pharmaciesRef = databaseReference.child(USER_NODE);
-        pharmaciesRef.child(userId).setValue(user);
+        pharmaciesRef.push().setValue(user);
     }
 
+
+    
+    public void printAllUsers() {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    User user = userSnapshot.getValue(User.class);
+                    if (user != null) {
+                        System.out.println("User: " + user.getName() + ", " + user.getEmail());
+                        // You can print other user details as well
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
+                System.out.println("Failed to read user data: " + databaseError.toException());
+            }
+        });
+    }
+
+    // Method to get a user by email
+    public void getPasswordByEmail(String email, final PasswordCallback callback) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByChild("email").equalTo(email);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    User user = userSnapshot.getValue(User.class);
+                    if (user != null) {
+                        String password = user.getPassword();
+                        callback.onPasswordRetrieved(password);
+                        return; // Exit the method after finding the user
+                    }
+                }
+                // If the loop finishes without finding the user
+                callback.onUserNotFound();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
+                System.out.println("Failed to read user data: " + databaseError.toException());
+            }
+        });
+    }
+
+    // Interface to handle password retrieval callback
+    public interface PasswordCallback {
+        void onPasswordRetrieved(String password);
+        void onUserNotFound();
+    }
 }
+
+

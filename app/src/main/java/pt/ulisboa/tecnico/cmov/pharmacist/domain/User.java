@@ -4,23 +4,24 @@ import java.util.ArrayList;
 
 public class User {
 
-    String name, username, password;
+    String name, password, email;
     ArrayList<Pharmacy> favoritePharmacy;
 
-    public User(String name, String username, String password) {
+    public User(String name, String email, String password) {
         this.name = name;
-        this.username = username;
+        this.email = email;
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
     }
 
-    public User(String username, String password) {
-        this.username = username;
+    public User(String name, String password) {
+
         this.password = password;
-        this.name = username;
+        this.name = name;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
     }
-
+    public User() {
+    }
     public void addPharmacyToFavorites(Pharmacy pharmacy) {
         this.favoritePharmacy.add(pharmacy);
     }
@@ -35,5 +36,17 @@ public class User {
 
     public Boolean isFavorite(Pharmacy pharmacy) {
         return this.favoritePharmacy.contains(pharmacy);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }
