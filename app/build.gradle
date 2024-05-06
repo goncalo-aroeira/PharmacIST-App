@@ -44,9 +44,11 @@ dependencies {
     implementation libs.navigation.ui
     implementation libs.firebase.database
     implementation libs.gridlayout
+    implementation libs.play.services.location
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation libs.material.vversion
+    implementation("com.google.android.gms:play-services-maps:18.0.1")
 
 }

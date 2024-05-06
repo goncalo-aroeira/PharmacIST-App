@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,26 +18,31 @@
         android:theme="@style/Theme.PharmacIST"
         tools:targetApi="31">
         <activity
+            android:name=".Map"
+            android:exported="false" />
+        <activity
             android:name=".MedicineActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false"/>
+
         <activity
             android:name=".MainMenu"
-            android:exported="true">
+            android:exported="true"~/>
 
-        </activity>
         <activity
             android:name=".Login"
             android:exported="true">
             <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".Register"
-            android:exported="true">
-        </activity>
+            android:exported="true"/>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC3s00j63XCocCDm1dSxh-oS719svIsi44" />
     </application>
 
 </manifest>

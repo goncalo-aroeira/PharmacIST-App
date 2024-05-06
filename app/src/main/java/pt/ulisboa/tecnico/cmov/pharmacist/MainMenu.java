@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainMenu extends AppCompatActivity {
 
     Button btnMedicine;
+    Button btnMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,15 @@ public class MainMenu extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainMenu.this, MedicineActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnMap = (Button) findViewById(R.id.btnMap);
+        btnMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainMenu.this, Map.class);
                 startActivity(intent);
             }
         });
