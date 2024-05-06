@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-feature android:name="android.hardware.camera" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,9 +25,14 @@
             android:name=".Map"
             android:exported="false" />
         <activity
+            android:name=".AddPharmacy"
+            android:exported="false" />
+        <activity
+            android:name=".CreateMedicine"
+            android:exported="false" />
+        <activity
             android:name=".MedicineActivity"
             android:exported="false"/>
-
         <activity
             android:name=".MainMenu"
             android:exported="true"~/>
@@ -33,6 +42,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

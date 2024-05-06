@@ -24,11 +24,25 @@
         android:queryHint="Search..." />
 
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnOpenPopupMenu"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="10dp"
+        android:text="+ Add" />
+
+
     <ListView
         android:id="@+id/lvPharmacies"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="692dp"
         android:layout_marginStart="14dp"
-        android:layout_marginEnd="14dp" />
+        android:layout_marginEnd="14dp">
+
+    </ListView>
+
 
 </LinearLayout>
+

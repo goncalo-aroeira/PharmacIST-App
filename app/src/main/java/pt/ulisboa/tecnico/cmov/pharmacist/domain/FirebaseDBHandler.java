@@ -42,10 +42,15 @@ public class FirebaseDBHandler {
         medicinesRef.child(medicineId).setValue(updatedMedicine);
     }
 
-    public void addPharmacy(Pharmacy pharmacy) {
-        DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
-        pharmaciesRef.push().setValue(pharmacy);
-    }
+    public void addPharmacy(Pharmacy pharmacy, OnPharmacyAddedListener listener) {
+        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE);
+
+        pharmacyRef.push().setValue(pharmacy)
+                .addOnSuccessListener(aVoid -> {
+                    listener.onPharmacyAdded();
+                })
+                .addOnFailureListener(listener::onPharmacyAddFailed);
+    };
 
     public void removePharmacy(String pharmacyName) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
@@ -78,7 +83,7 @@ public class FirebaseDBHandler {
 
     public void getAllPharmacies(OnPharmaciesLoadedListener listener) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
-        ArrayList<Pharmacy> pharmacyList = new ArrayList<>();
+        ArrayList<Pharmacy> pharmacyList = new ArrayList<Pharmacy>();
         pharmaciesRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
@@ -86,6 +91,15 @@ public class FirebaseDBHandler {
                             snapshot.child("name").getValue(String.class),
                             snapshot.child("address").getValue(String.class)
                     );
+
+                    snapshot.child("inventory").getChildren().forEach(medicineSnapshot -> {
+                        Medicine medicine = new Medicine(
+                                medicineSnapshot.child("name").getValue(String.class)
+                                //print medicine
+                        );
+                        pharmacy.addMedicine(medicine, medicineSnapshot.child("quantity").getValue(Integer.class));
+                    });
+
                     pharmacyList.add(pharmacy);
                 }
                 listener.onPharmaciesLoaded(pharmacyList);
@@ -122,11 +136,18 @@ public class FirebaseDBHandler {
         });
     }
 
+
     public interface OnPharmaciesLoadedListener {
         void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
 
         void onPharmaciesLoadFailed(Exception e);
     }
+    public interface OnPharmacyAddedListener {
+        void onPharmacyAdded();
+
+        void onPharmacyAddFailed(Exception e);
+    }
+
 
 
     public void addUser(User user) {

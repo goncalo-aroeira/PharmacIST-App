@@ -42,10 +42,19 @@ public class PharmacyManager {
     }
 
     // Method to manage pharmacies (can be named appropriately)
-    public void addPharmacy(Pharmacy pharmacy) {
-        this.dbHandler.addPharmacy(pharmacy);
-        pharmacies.add(pharmacy);
+    public void addPharmacy(Pharmacy pharmacy, OnPharmaciesAddListener listener) {
+        this.dbHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnPharmacyAddedListener() {
+            @Override
+            public void onPharmacyAdded() {
+                pharmacies.add(pharmacy);
+                listener.onPharmaciesAdd();
+            }
 
+            @Override
+            public void onPharmacyAddFailed(Exception e) {
+                listener.onPharmaciesAddFailed(e);
+            }
+        });
     }
 
     public void removePharmacy(Pharmacy pharmacy) {
@@ -61,6 +70,12 @@ public class PharmacyManager {
         void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
 
         void onPharmaciesLoadFailed(Exception e);
+    }
+
+    public interface OnPharmaciesAddListener {
+        void onPharmaciesAdd();
+
+        void onPharmaciesAddFailed(Exception e);
     }
 
 }

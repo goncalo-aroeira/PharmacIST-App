@@ -1,0 +1,11 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Material3.PopupMenu"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/cardview_light_background"
+    android:ellipsize="none"
+    android:gravity="center_horizontal"
+    android:minWidth="88dp"
+    android:padding="16dp"
+    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+

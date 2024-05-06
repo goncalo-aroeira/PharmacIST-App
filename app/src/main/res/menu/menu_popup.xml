@@ -1,0 +1,16 @@
+<!-- res/menu/my_menu.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/item_scan"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="Scan Barcode" />
+    <item
+        android:id="@+id/item_add"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="Add manually" />
+    <item
+        android:id="@+id/item_edit"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Edit" />
+
+</menu>

@@ -1,6 +1,9 @@
 [versions]
 agp = "8.3.1"
+constraintlayoutVersion = "2.1.0"
 firebaseBom = "33.0.0"
+floatingactionbuttonspeeddial = "1.1.0"
+googleMaterial = "1.4.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -15,10 +18,14 @@ navigationUi = "2.7.7"
 googleServices = "4.4.1"
 firebaseDatabase = "21.0.0"
 gridlayout = "1.0.0"
+annotationJvm = "1.7.1"
+playServicesMaps = "18.2.0"
 playServicesLocation = "21.2.0"
 
 [libraries]
+constraintlayout-v210 = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+floatingactionbuttonspeeddial = { module = "com.karleinstein:floatingactionbuttonspeeddial", version.ref = "floatingactionbuttonspeeddial" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -27,12 +34,15 @@ leanback = { module = "androidx.leanback:leanback", version.ref = "leanback" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+material-v140 = { module = "com.google.android.material:material", version.ref = "googleMaterial" }
 material-vversion = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 google-services = { group = "com.google.gms", name = "google-services", version.ref = "googleServices" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref = "gridlayout" }
+annotation-jvm = { group = "androidx.annotation", name = "annotation-jvm", version.ref = "annotationJvm" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]

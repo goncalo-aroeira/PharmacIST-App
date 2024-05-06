@@ -5,16 +5,19 @@ import android.widget.ImageView;
 public class Medicine {
 
     String name;
-    ImageView image;
+    ImageView boxPhoto;
+    String usage;
 
     public Medicine(String name) {
         this.name = name;
-        this.image = null;
+        this.boxPhoto = null;
+        this.usage = "No usage information available.";
     }
 
-    public Medicine(String name, ImageView image) {
+    public Medicine(String name, ImageView image, String usage) {
         this.name = name;
-        this.image = image;
+        this.boxPhoto = image;
+        this.usage = usage;
     }
 
     public String getName() {
@@ -22,11 +25,17 @@ public class Medicine {
     }
 
     public ImageView getImage() {
-        return image;
+        return boxPhoto;
     }
 
     public void setImage(ImageView image) {
-        this.image = image;
+        this.boxPhoto = image;
+    }
+    public String getUsage() {
+        return usage;
+    }
+    public void setUsage(String usage) {
+        this.usage = usage;
     }
 
 }

@@ -1,8 +1,13 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 
 import androidx.activity.EdgeToEdge;
@@ -11,9 +16,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
@@ -24,6 +34,10 @@ public class MedicineActivity extends AppCompatActivity {
     // Domain
     PharmacyManager pharmacyManager;
     ArrayList<Pharmacy> pharmacies;
+
+    final static String CAMERA_OPTION = "Scan barcode";
+    final static String ADD_MANUALLY_OPTION = "Insert manually";
+    MaterialButton btnMenu;
 
     // UI
     SearchView searchBarValue;
@@ -41,26 +55,27 @@ public class MedicineActivity extends AppCompatActivity {
         });
 
         pharmacyManager = new PharmacyManager(new FirebaseDBHandler());
+        lvPharmacies = (ListView) findViewById(R.id.lvPharmacies);
+        searchBarValue = (SearchView) findViewById(R.id.searchBarValue);
+        btnMenu = (MaterialButton) findViewById(R.id.btnOpenPopupMenu);
+        btnMenu.setOnClickListener(this::showMenu);
 
+
+        // import list of pharmacies
         pharmacyManager.loadPharmacies(new PharmacyManager.OnPharmaciesLoadedListener() {
             @Override
             public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
-                Log.d("Medicine Ativity Page", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
+                Log.d("Medicine Activity Page", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
                 MedicineActivity.this.pharmacies = pharmacies;
                 PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
                 lvPharmacies.setAdapter(pharmacyAdapter);
 
             }
-
             @Override
             public void onPharmaciesLoadFailed(Exception e) {
                 Log.e("Error", "MedicineActivity: Failed to load pharmacies", e);
             }
         });
-
-        // UI
-        searchBarValue = (SearchView) findViewById(R.id.searchBarValue);
-        lvPharmacies = (ListView) findViewById(R.id.lvPharmacies);
 
 
         // Search
@@ -69,8 +84,10 @@ public class MedicineActivity extends AppCompatActivity {
             public boolean onQueryTextSubmit(String query) {
                 ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
                 for (Pharmacy pharmacy : pharmacies) {
-                    if (pharmacy.getName().toLowerCase().contains(query.toLowerCase()) || pharmacy.getAddress().toLowerCase().contains(query.toLowerCase())) {
-                        filteredPharmacies.add(pharmacy);
+                    for (Medicine medicine : pharmacy.getInventory().keySet()) {
+                        if (medicine.getName().toLowerCase().contains(query.toLowerCase())) {
+                            filteredPharmacies.add(pharmacy);
+                        }
                     }
                 }
                 PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, filteredPharmacies);
@@ -82,8 +99,10 @@ public class MedicineActivity extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
                 ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
                 for (Pharmacy pharmacy : pharmacies) {
-                    if (pharmacy.getName().toLowerCase().contains(newText.toLowerCase())) {
-                        filteredPharmacies.add(pharmacy);
+                    for (Medicine medicine : pharmacy.getInventory().keySet()) {
+                        if (medicine.getName().toLowerCase().contains(newText.toLowerCase())) {
+                            filteredPharmacies.add(pharmacy);
+                        }
                     }
                 }
                 PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, filteredPharmacies);
@@ -92,5 +111,73 @@ public class MedicineActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+
+    private void showMenu(View v) {
+
+        Context context = getApplicationContext();
+
+        PopupMenu popup = new PopupMenu(getApplicationContext(), v);
+
+        // Inflate the menu from xml
+        popup.getMenuInflater().inflate(R.menu.menu_popup, popup.getMenu());
+
+
+        MenuItem scanItem = popup.getMenu().findItem(R.id.item_scan).setVisible(true);
+        scanItem.getItemId();
+        MenuItem addItem = popup.getMenu().findItem(R.id.item_add).setVisible(true);
+        MenuItem editItem = popup.getMenu().findItem(R.id.item_edit).setVisible(false);
+
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                Log.d("Clicked Event", "onMenuItemClick: " + menuItem.getTitle() + " clicked");
+                menuItem.getItemId();
+                if (menuItem.getItemId() == scanItem.getItemId()) {
+                    // Start scan barcode activity
+                    handleScanBarcode();
+                } else if (menuItem.getItemId() == addItem.getItemId()) {
+                    // Start add manually activity
+                    Log.d("Clicked Event", "onMenuItemClick: " + addItem.getItemId());
+                } else if (menuItem.getItemId() == editItem.getItemId()) {
+                    // Start add manually activity
+                    Log.d("Clicked Event", "onMenuItemClick: " + editItem.getItemId());
+
+                }
+                return true; // Return true if the click event is handled.
+            }
+        });
+
+        // Set the dismiss listener for the popup menu
+        popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
+            @Override
+            public void onDismiss(PopupMenu menu) {
+                // Respond to popup being dismissed.
+            }
+        });
+
+        // Show the popup menu.
+        popup.show();
+    }
+
+    private void handleScanBarcode() {
+        Log.d("Scan Barcode", "handleScanBarcode: ");
+        IntentIntegrator integrator = new IntentIntegrator(MedicineActivity.this);
+        integrator.setOrientationLocked(true);
+        integrator.initiateScan();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            String barcode = result.getContents();
+            Log.d("Scan Barcode", "onActivityResult: " + barcode);
+            // Start activity to show medicine details
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }

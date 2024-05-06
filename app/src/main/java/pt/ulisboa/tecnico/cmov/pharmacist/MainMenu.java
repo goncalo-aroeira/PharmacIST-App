@@ -13,7 +13,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainMenu extends AppCompatActivity {
 
-    Button btnMedicine;
+    Button btnMedicine, btnPharmacy;
     Button btnMap;
 
     @Override
@@ -32,6 +32,15 @@ public class MainMenu extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainMenu.this, MedicineActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnPharmacy = (Button) findViewById(R.id.btnPharmacy);
+        btnPharmacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainMenu.this, AddPharmacy.class);
                 startActivity(intent);
             }
         });

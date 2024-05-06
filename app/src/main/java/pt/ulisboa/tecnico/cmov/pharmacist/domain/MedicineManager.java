@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.util.Log;
+
+import com.google.firebase.FirebaseApp;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,24 +11,22 @@ import java.util.List;
 public class MedicineManager {
 
     private List<Medicine> medicines;
+    FirebaseDBHandler dbHandler;
 
-    public MedicineManager() {
+    public MedicineManager(FirebaseDBHandler dbHandler) {
         this.medicines = new ArrayList<>();
-    }
-
-    public MedicineManager(List<Medicine> medicines) {
-        this.medicines = new ArrayList<>(medicines); // Defensive copy
+        this.dbHandler = dbHandler;
     }
 
     public List<Medicine> getMedicines() {
         return new ArrayList<>(medicines); // Defensive copy
     }
 
+
     public void setMedicines(List<Medicine> medicines) {
-        this.medicines = new ArrayList<>(medicines); // Defensive copy
+        this.medicines = new ArrayList<Medicine>(medicines); // Defensive copy
     }
 
-    // Methods to manage medicines (can be named appropriately)
     public void addMedicine(Medicine medicine) {
         medicines.add(medicine);
     }

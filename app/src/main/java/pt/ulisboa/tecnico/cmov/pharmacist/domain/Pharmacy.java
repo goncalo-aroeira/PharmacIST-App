@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.widget.ImageView;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -10,9 +11,10 @@ public class Pharmacy {
     String name;
     String address; // Missing location on map
     ImageView picture;
-    private Map<Medicine, Integer> inventory;
+    private HashMap<Medicine, Integer> inventory = new HashMap<Medicine, Integer>();
 
-    public Pharmacy(String name, String address, Boolean isFavorite, ImageView image) {
+
+    public Pharmacy(String name, String address,  ImageView image) {
         this.name = name;
         this.address = address;
         this.picture = image;
