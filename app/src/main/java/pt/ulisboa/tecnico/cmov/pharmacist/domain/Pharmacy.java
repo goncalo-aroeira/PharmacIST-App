@@ -2,11 +2,12 @@ package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.widget.ImageView;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Pharmacy {
+public class Pharmacy implements Serializable {
 
     String name;
     String address; // Missing location on map
@@ -57,7 +58,7 @@ public class Pharmacy {
         }
     }
 
-    public Map<Medicine, Integer> getInventory() {
+    public HashMap<Medicine, Integer> getInventory() {
         return this.inventory;
     }
 

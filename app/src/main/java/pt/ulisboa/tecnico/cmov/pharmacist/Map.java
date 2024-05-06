@@ -34,9 +34,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
@@ -134,8 +136,8 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
 
                     // Launch detail activity or fragment and pass data
                     Intent intent = new Intent(Map.this, PharmacyInformationPannel.class);
-                    intent.putExtra("pharmacy_name", clickedPharmacy.getName());
-                    intent.putExtra("pharmacy_address", clickedPharmacy.getAddress());
+                    intent.putExtra(("pharmacy"), clickedPharmacy);
+
                     LatLng location = geocodeAddress(clickedPharmacy.getAddress());
                     intent.putExtra("pharmacy_location", location);
                     // Add more data as needed
