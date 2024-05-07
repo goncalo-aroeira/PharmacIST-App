@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
@@ -67,6 +68,13 @@ public class PharmacyInformationPannel extends AppCompatActivity {
 
             Button navigateButton = findViewById(R.id.button_navigate_to_pharmacy);
             navigateButton.setOnClickListener(view -> navigateToPharmacy(pharmacyLocation));
+
+            // Initialize the RecyclerView for displaying medicines
+            RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
+            recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(this));
+            List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
+            MedicineAdapter adapter = new MedicineAdapter(medicines, pharmacyInventory);
+            recyclerViewMedicines.setAdapter(adapter);
         }
     }
 
