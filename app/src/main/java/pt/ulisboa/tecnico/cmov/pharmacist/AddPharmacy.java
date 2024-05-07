@@ -34,7 +34,6 @@ import java.util.Objects;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
 public class AddPharmacy extends AppCompatActivity {
 
@@ -47,6 +46,9 @@ public class AddPharmacy extends AppCompatActivity {
     ImageView ivLocation;
 
     ImageButton isFavorite;
+
+    FirebaseDBHandler firebaseDBHandler;
+
 
     private static final String PHARMACIES_NODE = "pharmacy";
     ActivityResultLauncher<Intent> resultLauncher;
@@ -153,21 +155,23 @@ public class AddPharmacy extends AppCompatActivity {
         // Missing MAP
         Pharmacy pharmacy = new Pharmacy(name, address);
 
-        PharmacyManager pharmacyManager = new PharmacyManager(new FirebaseDBHandler());
-        pharmacyManager.addPharmacy(pharmacy, new PharmacyManager.OnPharmaciesAddListener() {
+        firebaseDBHandler = new FirebaseDBHandler();
+        firebaseDBHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnChangeListener() {
             @Override
-            public void onPharmaciesAdd() {
+            public void onSuccess() {
                 Toast toast = Toast.makeText(getApplicationContext(), "Pharmacy added successfully", Toast.LENGTH_SHORT);
                 toast.show();
             }
 
             @Override
-            public void onPharmaciesAddFailed(Exception e) {
+            public void onFailure(Exception e) {
                 Toast toast = Toast.makeText(getApplicationContext(), "System failed to add the pharmacy ", Toast.LENGTH_SHORT);
                 toast.show();
                 e.printStackTrace();
             }
         });
+
+
     }
 
     @Override

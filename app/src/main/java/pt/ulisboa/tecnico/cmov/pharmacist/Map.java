@@ -7,7 +7,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -34,19 +33,15 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
 public class Map extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap gMap;
-    ArrayList<Pharmacy> pharmacies;
-    PharmacyManager pharmacyManager;
+    private ArrayList<Pharmacy> pharmacies;
     private EditText editTextSearch;
     private Button buttonSearch;
     private Marker searchedLocationMarker;
@@ -67,23 +62,22 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        pharmacyManager = new PharmacyManager(new FirebaseDBHandler());
-        pharmacyManager.loadPharmacies(new PharmacyManager.OnPharmaciesLoadedListener() {
-            @Override
-            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
-                Log.d("Map", "Loaded pharmacies");
-                Map.this.pharmacies = pharmacies;
-                Log.d("Map", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
 
-                // Call onMapReady here because pharmacies are loaded now
-                if (gMap != null) {
-                    onMapReady(gMap);
-                }
+        FirebaseDBHandler dbHandler = new FirebaseDBHandler();
+
+        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Map", "Failed to load pharmacies", e);
             }
 
             @Override
-            public void onPharmaciesLoadFailed(Exception e) {
-                Log.e("Error", "Map: Failed to load pharmacies", e);
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                Log.d("Map", "Pharmacies loaded: " + pharmacies.size());
+                Map.this.pharmacies = pharmacies;
+                if (gMap != null) {
+                    onMapReady(gMap);
+                }
             }
         });
 
@@ -92,15 +86,12 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
         buttonSearch = findViewById(R.id.button_search);
 
         // Set click listener for search button
-        buttonSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String address = editTextSearch.getText().toString().trim();
-                if (!address.isEmpty()) {
-                    searchAddress(address);
-                } else {
-                    Toast.makeText(Map.this, "Please enter an address", Toast.LENGTH_SHORT).show();
-                }
+        buttonSearch.setOnClickListener(v -> {
+            String address = editTextSearch.getText().toString().trim();
+            if (!address.isEmpty()) {
+                searchAddress(address);
+            } else {
+                Toast.makeText(Map.this, "Please enter an address", Toast.LENGTH_SHORT).show();
             }
         });
     }

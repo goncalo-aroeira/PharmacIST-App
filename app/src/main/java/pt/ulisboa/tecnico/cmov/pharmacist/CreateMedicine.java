@@ -11,11 +11,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.MedicineManager;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
-
 public class CreateMedicine extends AppCompatActivity {
 
     EditText medicineName, usage;
@@ -33,8 +28,6 @@ public class CreateMedicine extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        MedicineManager medicineManager = new MedicineManager(new FirebaseDBHandler());
 
         medicineName = findViewById(R.id.medicineName);
         usage = findViewById(R.id.medicineDescription);

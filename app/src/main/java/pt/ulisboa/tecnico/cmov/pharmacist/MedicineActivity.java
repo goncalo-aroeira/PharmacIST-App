@@ -25,14 +25,11 @@ import java.util.ArrayList;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
-;
 
 
 public class MedicineActivity extends AppCompatActivity {
     // Domain
-    PharmacyManager pharmacyManager;
     ArrayList<Pharmacy> pharmacies;
 
     final static String CAMERA_OPTION = "Scan barcode";
@@ -54,7 +51,7 @@ public class MedicineActivity extends AppCompatActivity {
             return insets;
         });
 
-        pharmacyManager = new PharmacyManager(new FirebaseDBHandler());
+        FirebaseDBHandler dbHandler = new FirebaseDBHandler();
         lvPharmacies = (ListView) findViewById(R.id.lvPharmacies);
         searchBarValue = (SearchView) findViewById(R.id.searchBarValue);
         btnMenu = (MaterialButton) findViewById(R.id.btnOpenPopupMenu);
@@ -62,7 +59,7 @@ public class MedicineActivity extends AppCompatActivity {
 
 
         // import list of pharmacies
-        pharmacyManager.loadPharmacies(new PharmacyManager.OnPharmaciesLoadedListener() {
+        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
             @Override
             public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
                 Log.d("Medicine Activity Page", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
@@ -71,12 +68,12 @@ public class MedicineActivity extends AppCompatActivity {
                 lvPharmacies.setAdapter(pharmacyAdapter);
 
             }
+
             @Override
-            public void onPharmaciesLoadFailed(Exception e) {
+            public void onFailure(Exception e) {
                 Log.e("Error", "MedicineActivity: Failed to load pharmacies", e);
             }
         });
-
 
         // Search
         searchBarValue.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
