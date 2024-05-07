@@ -28,10 +28,72 @@ public class FirebaseDBHandler {
         databaseReference = FirebaseDatabase.getInstance().getReference();
     }
 
-    public void addMedicine(Medicine medicine) {
+    public void addMedicine(Medicine medicine, AddMedicineListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
-        medicinesRef.push().setValue(medicine);
+        medicinesRef.push().setValue(medicine)
+                .addOnSuccessListener(aVoid -> listener.onMedicineAdded())
+                .addOnFailureListener(listener::onMedicineAddFailed);
+
     }
+
+    //Add medicine to pharmacy and quantity
+    public void addMedicineToPharmacy(String pharmacyName, String medicineName, int quantity, AddMedicineListener listener) {
+        DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
+        Query query = pharmaciesRef.orderByChild("name").equalTo(pharmacyName);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot pharmacySnapshot : dataSnapshot.getChildren()) {
+                    DatabaseReference medicineRef = pharmacySnapshot.child("inventory").getRef().push();
+                    medicineRef.child("name").setValue(medicineName);
+                    medicineRef.child("quantity").setValue(quantity);
+                    listener.onMedicineAddedInventory();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
+                listener.onMedicineAddInventoryFailed(databaseError.toException());
+            }
+        });
+    }
+
+    public void getMedicineByName(String medicineName, OnMedicineLoadedListener listener) {
+        DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
+        Query query = medicinesRef.orderByChild("name").equalTo(medicineName);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Medicine medicine = snapshot.getValue(Medicine.class);
+                    listener.onMedicineLoaded(medicine);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onMedicineLoadFailed(databaseError.toException());
+            }
+        });
+    }
+
+    public interface AddMedicineListener {
+        void onMedicineAdded();
+
+        void onMedicineAddFailed(Exception e);
+
+        void onMedicineAddedInventory();
+
+        void onMedicineAddInventoryFailed(Exception e);
+    }
+
+    public interface OnMedicineLoadedListener {
+        void onMedicineLoaded(Medicine medicine);
+
+        void onMedicineLoadFailed(Exception e);
+    }
+
 
     public void removeMedicine(String medicineId) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
