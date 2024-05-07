@@ -7,56 +7,47 @@ import androidx.annotation.NonNull;
 
 public class UserLocalStore {
 
-    // Class for storing user data on the phone (shared preferences) and get logged in users details
+    private static final String PREF_NAME = "LoginPreferences";
+    private static final String KEY_EMAIL = "email";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_PASSWORD = "password";
 
-    public static final String SP_NAME = "userDetails";
+    private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
 
-    SharedPreferences userLocalDatabase;
-
+    SharedPreferences sharedPreferences;
 
     public UserLocalStore(@NonNull Context context) {
-        // force activities to give us their context
-        userLocalDatabase = context.getSharedPreferences(SP_NAME, 0);
+        sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    //save user as logged in
-    public void storeUserData(@NonNull User user) {
-        SharedPreferences.Editor spEditor = userLocalDatabase.edit();
-        spEditor.putString("name", user.name);
-        spEditor.putString("password", user.password);
-        spEditor.apply();
-        spEditor.commit();
+    public void saveLoginDetails(String name, String email, String password) {
+        sharedPreferences.edit().putString(KEY_NAME, name).apply();
+        sharedPreferences.edit().putString(KEY_EMAIL, email).apply();
+        sharedPreferences.edit().putString(KEY_PASSWORD, password).apply();
+        sharedPreferences.edit().putBoolean(KEY_IS_LOGGEDIN, true).apply();
     }
 
-    // return the user that logged in
-    public User getLoggedInUser() {
-        String name = userLocalDatabase.getString("name", "");
-        String password = userLocalDatabase.getString("password", "");
-
-        return new User(name, password);
+    public void clearLoginDetails() {
+        sharedPreferences.edit().clear().apply();
+        sharedPreferences.edit().putBoolean(KEY_IS_LOGGEDIN, false).apply();
     }
 
-    // return boolean to verify in user in logged in yet
-    public boolean getUserLoggedIn() {
-        if (userLocalDatabase.getBoolean("loggedIn", false) == true) {
-            return true;
-        } else {
-            return false;
-        }
+    public String getLoggedInEmail() {
+        return sharedPreferences.getString(KEY_EMAIL, "");
     }
 
-    public void setUserLoggedIn(boolean loggedIn) {
-        SharedPreferences.Editor spEditor = userLocalDatabase.edit();
-        spEditor.putBoolean("loggedIn", loggedIn);
-        spEditor.apply();
-        spEditor.commit();
+    public String getLoggedInName() {
+        return sharedPreferences.getString(KEY_NAME, "");
     }
 
-    public void cleanUserData() {
-        SharedPreferences.Editor spEditor = userLocalDatabase.edit();
-        spEditor.clear();
-        spEditor.apply();
-        spEditor.commit();
+    public String getLoggedInPassword() {
+        return sharedPreferences.getString(KEY_PASSWORD, "");
     }
+
+    public boolean isUserLoggedIn() {
+        return sharedPreferences.getBoolean(KEY_IS_LOGGEDIN, false);
+    }
+
+    ;
 
 }

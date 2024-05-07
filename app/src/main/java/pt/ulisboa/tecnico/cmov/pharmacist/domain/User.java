@@ -14,14 +14,13 @@ public class User {
         this.favoritePharmacy = new ArrayList<Pharmacy>();
     }
 
-    public User(String name, String password) {
-
+    public User(String email, String password) {
+        this.name = email;
+        this.email = email;
         this.password = password;
-        this.name = name;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
     }
-    public User() {
-    }
+
     public void addPharmacyToFavorites(Pharmacy pharmacy) {
         this.favoritePharmacy.add(pharmacy);
     }

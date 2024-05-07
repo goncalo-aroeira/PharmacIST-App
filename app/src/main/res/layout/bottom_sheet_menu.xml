@@ -1,0 +1,62 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/layout_camera"
+        style="@style/Widget.MaterialComponents.ActionBar.PrimarySurface"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:src="@android:drawable/ic_menu_camera" />
+
+        <TextView
+            android:id="@+id/text_view_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Take Photo"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" />
+
+    <LinearLayout
+        android:id="@+id/layout_gallery"
+        style="@style/Widget.MaterialComponents.ActionBar.PrimarySurface"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:src="@android:drawable/ic_menu_gallery" />
+
+        <TextView
+            android:id="@+id/text_view_gallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select from Gallery"
+            android:textSize="18sp" />
+    </LinearLayout>
+</LinearLayout>
+

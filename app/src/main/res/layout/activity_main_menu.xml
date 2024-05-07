@@ -5,53 +5,111 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".MainMenu"
     tools:layout_editor_absoluteX="1dp"
     tools:layout_editor_absoluteY="1dp">
 
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/materialDivider"
+        style="@style/Widget.MaterialComponents.MaterialDivider"
+        android:layout_width="393dp"
+        android:layout_height="155dp"
+        android:layout_marginBottom="116dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnMedicine"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnLogout"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="43dp"
+        android:layout_marginEnd="16dp"
+        android:text="Logout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvWelcome"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="0dp"
+        android:id="@+id/textView8"
+        style="@style/TextAppearance.AppCompat.Body1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="854dp"
-        android:gravity="center"
-        android:text="PharmacIST"
-        android:textSize="20dp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginTop="48dp"
+        android:text="Welcome"
+        app:layout_constraintStart_toStartOf="@+id/tvWelcome"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvWelcome"
+        style="@style/TextAppearance.AppCompat.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="169dp"
+        android:text="User"
+        app:layout_constraintEnd_toStartOf="@+id/btnLogout"
+        app:layout_constraintStart_toEndOf="@+id/imageView2"
+        app:layout_constraintTop_toBottomOf="@+id/textView8" />
 
     <Button
         android:id="@+id/btnMedicine"
-        android:layout_width="wrap_content"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="76dp"
-        android:layout_marginTop="144dp"
-        android:text="Medicine"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        android:text="Medicine Menu"
+        app:layout_constraintBottom_toTopOf="@+id/btnMap"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/materialDivider" />
 
     <Button
         android:id="@+id/btnMap"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="236dp"
-        android:layout_marginTop="124dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="44dp"
         android:text="Map"
+        app:layout_constraintBottom_toTopOf="@+id/btnPharmacy"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/btnMedicine" />
 
     <Button
         android:id="@+id/btnPharmacy"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="232dp"
-        android:text="Medicine"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="443dp"
+        android:text="Pharmacy Menu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/btnMap" />
+
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="70dp"
+        android:layout_height="75dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toTopOf="@+id/tvWelcome"
+        app:layout_constraintEnd_toStartOf="@+id/tvWelcome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvWelcome"
+        app:layout_constraintVertical_bias="0.8"
+        tools:srcCompat="@tools:sample/avatars[3]" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

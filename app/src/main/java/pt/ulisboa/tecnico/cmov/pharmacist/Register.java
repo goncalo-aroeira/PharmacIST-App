@@ -12,24 +12,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.User;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 
 public class Register extends AppCompatActivity {
-    EditText editTextText;
-    EditText editTextTextEmailAddress2;
-    EditText editTextTextPassword2;
-
-    Button button3;
-
-    String userName;
-    String userEmail;
-    String userPass;
-
+    EditText etUsername, etEmail, etPassword;
+    Button btnRegister;
+    String userName, userEmail, userPass;
     FirebaseDBHandler firebaseDBHandler;
+
+    UserLocalStore userLocalStore = new UserLocalStore(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,28 +35,23 @@ public class Register extends AppCompatActivity {
             return insets;
         });
 
-
         firebaseDBHandler = new FirebaseDBHandler();
 
-        editTextText = findViewById(R.id.editTextText);
-        editTextTextEmailAddress2 = findViewById(R.id.editTextTextEmailAddress2);
-        editTextTextPassword2 = findViewById(R.id.editTextTextPassword2);
-        button3 = findViewById(R.id.button3);
+        etUsername = findViewById(R.id.etUsername);
+        etEmail = findViewById(R.id.etEmailRegister);
+        etPassword = findViewById(R.id.etPasswordRegister);
+        btnRegister = findViewById(R.id.btnRegister);
 
-
-
-        button3.setOnClickListener(new View.OnClickListener() {
+        btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                userName = editTextText.getText().toString();
-                userEmail = editTextTextEmailAddress2.getText().toString();
-                userPass = editTextTextPassword2.getText().toString();
+                userName = etUsername.getText().toString();
+                userEmail = etEmail.getText().toString();
+                userPass = etPassword.getText().toString();
                 firebaseDBHandler.addUser(new User(userName,userEmail,userPass));
+                userLocalStore.saveLoginDetails(userName, userEmail, userPass);
                 startActivity(new Intent(Register.this, MainMenu.class));
-                // check password on back end
-
             }
         });
-
     }
 }

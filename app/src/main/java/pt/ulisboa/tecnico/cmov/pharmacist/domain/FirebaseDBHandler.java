@@ -19,6 +19,7 @@ public class FirebaseDBHandler {
     private static final String MEDICINES_NODE = "medicine";
     private static final String PHARMACIES_NODE = "pharmacy";
     private static final String USER_NODE = "user";
+    private static final String FAVORITES_NODE = "favorites";
 
 
     private final DatabaseReference databaseReference;
@@ -109,6 +110,68 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void getFavoritesPharmacies(String userEmail) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByChild("email").equalTo(userEmail);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    for (DataSnapshot pharmacySnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
+                        String pharmacyAddress = pharmacySnapshot.getValue(String.class);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public void addPharmacyToUserFavorite(String userEmail, String pharmacyAddress) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByChild("email").equalTo(userEmail);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    userSnapshot.getRef().child(FAVORITES_NODE).push().setValue(pharmacyAddress);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
+                System.out.println("Failed to read user data: " + databaseError.toException());
+            }
+        });
+    }
+
+    public void removePharmacyFromFavorite(String userEmail, String pharmacyAddress) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByChild("email").equalTo(userEmail);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    for (DataSnapshot pharmacySnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
+                        if (pharmacySnapshot.getValue(String.class).equals(pharmacyAddress)) {
+                            pharmacySnapshot.getRef().removeValue();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
+                System.out.println("Failed to read user data: " + databaseError.toException());
+            }
+        });
+    }
+
     ;
 
     public void updatePharmacyByName(String pharmacyName, Pharmacy newPharmacyData) {
@@ -154,8 +217,6 @@ public class FirebaseDBHandler {
         DatabaseReference pharmaciesRef = databaseReference.child(USER_NODE);
         pharmaciesRef.push().setValue(user);
     }
-
-
     
     public void printAllUsers() {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
@@ -180,7 +241,7 @@ public class FirebaseDBHandler {
     }
 
     // Method to get a user by email
-    public void getPasswordByEmail(String email, final PasswordCallback callback) {
+    public void performLogin(String email, String passwordInput, final PasswordCallback callback) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
         Query query = usersRef.orderByChild("email").equalTo(email);
 
@@ -188,15 +249,20 @@ public class FirebaseDBHandler {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-                    User user = userSnapshot.getValue(User.class);
+
+                    User user = new User(userSnapshot.child("name").getValue(String.class), userSnapshot.child("email").getValue(String.class), userSnapshot.child("password").getValue(String.class));
                     if (user != null) {
-                        String password = user.getPassword();
-                        callback.onPasswordRetrieved(password);
-                        return; // Exit the method after finding the user
+                        String password = user.getPassword(); // Get the password
+                        if (password.equals(passwordInput)) {
+                            callback.onSucessfullLogin(user);
+                            return; // Exit the loop : Success
+                        } else {
+                            callback.onWrongPassword();
+                            return; // Exit the loop : Wrong password
+                        }
                     }
                 }
-                // If the loop finishes without finding the user
-                callback.onUserNotFound();
+                callback.onUserNotFound(); // User not found
             }
 
             @Override
@@ -207,11 +273,39 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void uploadImage(String base64Image, String node, OnImageSavedListener listener) {
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(node);
+        databaseReference.push().setValue(base64Image)
+                .addOnSuccessListener(aVoid -> {
+                    listener.onImageSaved();
+                })
+                .addOnFailureListener(aVoid -> {
+                    listener.onImageSaveFailed();
+                });
+
+
+    }
+
+
     // Interface to handle password retrieval callback
     public interface PasswordCallback {
-        void onPasswordRetrieved(String password);
         void onUserNotFound();
+
+        void onSucessfullLogin(User user);
+
+        void onWrongPassword();
+
     }
+
+    public interface OnImageSavedListener {
+        void onImageSaved();
+
+        void onImageSaveFailed();
+
+    }
+
+
 }
 
 
