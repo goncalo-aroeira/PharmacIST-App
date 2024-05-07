@@ -2,7 +2,9 @@ package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.widget.ImageView;
 
-public class Medicine {
+import java.io.Serializable;
+
+public class Medicine implements Serializable {
 
     String name;
     ImageView boxPhoto;

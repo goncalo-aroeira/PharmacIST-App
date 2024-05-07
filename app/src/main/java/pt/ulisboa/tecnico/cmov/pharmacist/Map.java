@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -33,9 +34,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.PharmacyManager;
 
@@ -111,17 +114,53 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
             return;
         }
 
-
         for (Pharmacy pharmacy : pharmacies) {
             Log.d("Map", "Adding marker for pharmacy: " + pharmacy.getName() + " at address: " + pharmacy.getAddress());
             LatLng location = geocodeAddress(pharmacy.getAddress());
 
             if (location != null) {
-                googleMap.addMarker(new MarkerOptions().position(location).title(pharmacy.getName()));
+                Marker marker = googleMap.addMarker(new MarkerOptions().position(location).title(pharmacy.getName()));
+                pharmacyMarkers.add(marker);
             }
         }
         LatLng initial_location = geocodeAddress("Lisbon");
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initial_location, 12));
+
+        gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                // Check if the clicked marker is a pharmacy marker
+                if (pharmacyMarkers.contains(marker)) {
+                    // Retrieve the corresponding Pharmacy object
+                    Pharmacy clickedPharmacy = getPharmacyFromMarker(marker);
+
+                    // Launch detail activity or fragment and pass data
+                    Intent intent = new Intent(Map.this, PharmacyInformationPannel.class);
+                    intent.putExtra(("pharmacy"), clickedPharmacy);
+
+                    LatLng location = geocodeAddress(clickedPharmacy.getAddress());
+                    intent.putExtra("pharmacy_location", location);
+                    // Add more data as needed
+                    startActivity(intent);
+
+                    // Return true to indicate that the click event is handled
+                    return true;
+                }
+
+                // Return false to indicate that the click event is not handled
+                return false;
+            }
+        });
+    }
+
+    private Pharmacy getPharmacyFromMarker(Marker marker) {
+        // Iterate through pharmacies and find the matching marker
+        for (Pharmacy pharmacy : pharmacies) {
+            if (marker.getTitle().equals(pharmacy.getName())) {
+                return pharmacy;
+            }
+        }
+        return null;
     }
 
     private LatLng geocodeAddress(String address) {
