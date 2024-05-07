@@ -26,7 +26,7 @@ public class PharmacyManager {
             }
 
             @Override
-            public void onPharmaciesLoadFailed(Exception e) {
+            public void onFailure(Exception e) {
                 Log.e("Error", "Failed to load pharmacies", e);
                 listener.onPharmaciesLoadFailed(e);
             }
@@ -43,23 +43,32 @@ public class PharmacyManager {
 
     // Method to manage pharmacies (can be named appropriately)
     public void addPharmacy(Pharmacy pharmacy, OnPharmaciesAddListener listener) {
-        this.dbHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnPharmacyAddedListener() {
+        this.dbHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnChangeListener() {
             @Override
-            public void onPharmacyAdded() {
+            public void onSuccess() {
                 pharmacies.add(pharmacy);
                 listener.onPharmaciesAdd();
             }
 
             @Override
-            public void onPharmacyAddFailed(Exception e) {
+            public void onFailure(Exception e) {
                 listener.onPharmaciesAddFailed(e);
             }
         });
     }
 
     public void removePharmacy(Pharmacy pharmacy) {
-        this.dbHandler.removePharmacy(pharmacy.getName());
-        pharmacies.remove(pharmacy);
+        this.dbHandler.removePharmacy(pharmacy.getName(), new FirebaseDBHandler.OnChangeListener() {
+            @Override
+            public void onSuccess() {
+                pharmacies.remove(pharmacy);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Error", "Failed to remove pharmacy", e);
+            }
+        });
     }
 
     public Pharmacy getPharmacyByName(String name) {

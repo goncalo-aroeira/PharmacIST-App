@@ -63,7 +63,7 @@ public class Login extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onSucessfullLogin(User user) {
+                    public void onSuccessfulLogin(User user) {
                         Log.d("Login Page", "onSucessfullLogin: User data: " + user.getName() + " " + user.getEmail() + " " + user.getPassword());
                         userLocalStore.saveLoginDetails(user.getName(), user.getEmail(), user.getPassword());
                         Toast.makeText(Login.this, "Login Success", Toast.LENGTH_SHORT).show();

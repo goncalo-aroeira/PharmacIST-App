@@ -128,14 +128,15 @@ public class AddPharmacy extends AppCompatActivity {
                 FirebaseDBHandler firebaseDBHandler = new FirebaseDBHandler();
                 firebaseDBHandler.uploadImage(base64Image, PHARMACIES_NODE, new FirebaseDBHandler.OnImageSavedListener() {
                     @Override
-                    public void onImageSaved() {
-                        ivLocation.setImageURI(photoUri);
-                        Toast.makeText(getApplicationContext(), "Image saved successfully", Toast.LENGTH_SHORT).show();
+                    public void onFailure(Exception e) {
+                        Toast.makeText(getApplicationContext(), "Failed to save image", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onImageSaveFailed() {
-                        Toast.makeText(getApplicationContext(), "Failed to save image", Toast.LENGTH_SHORT).show();
+                    public void onImageSaved() {
+                        ivLocation.setImageURI(photoUri);
+                        Toast.makeText(getApplicationContext(), "Image saved successfully", Toast.LENGTH_SHORT).show();
+
                     }
                 });
             });

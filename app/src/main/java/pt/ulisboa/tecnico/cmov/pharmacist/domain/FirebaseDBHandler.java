@@ -21,23 +21,22 @@ public class FirebaseDBHandler {
     private static final String USER_NODE = "user";
     private static final String FAVORITES_NODE = "favorites";
 
-
     private final DatabaseReference databaseReference;
 
     public FirebaseDBHandler() {
         databaseReference = FirebaseDatabase.getInstance().getReference();
     }
 
-    public void addMedicine(Medicine medicine, AddMedicineListener listener) {
+    public void addMedicine(Medicine medicine, OnChangeListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
         medicinesRef.push().setValue(medicine)
-                .addOnSuccessListener(aVoid -> listener.onMedicineAdded())
-                .addOnFailureListener(listener::onMedicineAddFailed);
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnFailureListener(listener::onFailure);
 
     }
 
     //Add medicine to pharmacy and quantity
-    public void addMedicineToPharmacy(String pharmacyName, String medicineName, int quantity, AddMedicineListener listener) {
+    public void addMedicineToPharmacy(String pharmacyName, String medicineName, int quantity, OnChangeListener listener) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
         Query query = pharmaciesRef.orderByChild("name").equalTo(pharmacyName);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -47,14 +46,14 @@ public class FirebaseDBHandler {
                     DatabaseReference medicineRef = pharmacySnapshot.child("inventory").getRef().push();
                     medicineRef.child("name").setValue(medicineName);
                     medicineRef.child("quantity").setValue(quantity);
-                    listener.onMedicineAddedInventory();
+                    listener.onSuccess();
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 // Handle error
-                listener.onMedicineAddInventoryFailed(databaseError.toException());
+                listener.onFailure(databaseError.toException());
             }
         });
     }
@@ -69,30 +68,18 @@ public class FirebaseDBHandler {
                     Medicine medicine = snapshot.getValue(Medicine.class);
                     listener.onMedicineLoaded(medicine);
                 }
+
+                listener.onFailure(new Exception("Medicine not found"));
             }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onMedicineLoadFailed(databaseError.toException());
+                listener.onFailure(databaseError.toException());
             }
         });
     }
 
-    public interface AddMedicineListener {
-        void onMedicineAdded();
-
-        void onMedicineAddFailed(Exception e);
-
-        void onMedicineAddedInventory();
-
-        void onMedicineAddInventoryFailed(Exception e);
-    }
-
-    public interface OnMedicineLoadedListener {
-        void onMedicineLoaded(Medicine medicine);
-
-        void onMedicineLoadFailed(Exception e);
-    }
 
 
     public void removeMedicine(String medicineId) {
@@ -105,31 +92,29 @@ public class FirebaseDBHandler {
         medicinesRef.child(medicineId).setValue(updatedMedicine);
     }
 
-    public void addPharmacy(Pharmacy pharmacy, OnPharmacyAddedListener listener) {
+    public void addPharmacy(Pharmacy pharmacy, OnChangeListener listener) {
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE);
 
         pharmacyRef.push().setValue(pharmacy)
                 .addOnSuccessListener(aVoid -> {
-                    listener.onPharmacyAdded();
+                    listener.onSuccess();
                 })
-                .addOnFailureListener(listener::onPharmacyAddFailed);
+                .addOnFailureListener(listener::onFailure);
     };
 
-    public void removePharmacy(String pharmacyName) {
+    public void removePharmacy(String pharmacyName, OnChangeListener listener) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
         // Query the database to find the pharmacy with the specified name
         Query query = pharmaciesRef.orderByChild("name").equalTo(pharmacyName);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // Iterate through the result set
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    // Remove each pharmacy entry found
                     snapshot.getRef().removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                System.out.println("Pharmacy removed successfully");
+                                listener.onSuccess();
                             }
                         }
                     });
@@ -138,8 +123,7 @@ public class FirebaseDBHandler {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // Handle errors
-                System.out.println("Database Error: " + databaseError.getMessage());
+                listener.onFailure(new Exception(databaseError.getMessage()));
             }
         });
     }
@@ -167,7 +151,7 @@ public class FirebaseDBHandler {
                 }
                 listener.onPharmaciesLoaded(pharmacyList);
             } else {
-                listener.onPharmaciesLoadFailed(Objects.requireNonNull(task.getException()));
+                listener.onFailure(Objects.requireNonNull(task.getException()));
             }
         });
     }
@@ -219,7 +203,7 @@ public class FirebaseDBHandler {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     for (DataSnapshot pharmacySnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
-                        if (pharmacySnapshot.getValue(String.class).equals(pharmacyAddress)) {
+                        if (Objects.requireNonNull(pharmacySnapshot.getValue(String.class)).equals(pharmacyAddress)) {
                             pharmacySnapshot.getRef().removeValue();
                         }
                     }
@@ -233,8 +217,6 @@ public class FirebaseDBHandler {
             }
         });
     }
-
-    ;
 
     public void updatePharmacyByName(String pharmacyName, Pharmacy newPharmacyData) {
         // Get a reference to the "pharmacy" node
@@ -262,16 +244,7 @@ public class FirebaseDBHandler {
     }
 
 
-    public interface OnPharmaciesLoadedListener {
-        void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
 
-        void onPharmaciesLoadFailed(Exception e);
-    }
-    public interface OnPharmacyAddedListener {
-        void onPharmacyAdded();
-
-        void onPharmacyAddFailed(Exception e);
-    }
 
 
 
@@ -313,16 +286,14 @@ public class FirebaseDBHandler {
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
 
                     User user = new User(userSnapshot.child("name").getValue(String.class), userSnapshot.child("email").getValue(String.class), userSnapshot.child("password").getValue(String.class));
-                    if (user != null) {
-                        String password = user.getPassword(); // Get the password
-                        if (password.equals(passwordInput)) {
-                            callback.onSucessfullLogin(user);
-                            return; // Exit the loop : Success
-                        } else {
-                            callback.onWrongPassword();
-                            return; // Exit the loop : Wrong password
-                        }
+                    String password = user.getPassword(); // Get the password
+                    // Exit the loop : Wrong password
+                    if (password.equals(passwordInput)) {
+                        callback.onSuccessfulLogin(user);
+                    } else {
+                        callback.onWrongPassword();
                     }
+                    return; // Exit the loop : Success
                 }
                 callback.onUserNotFound(); // User not found
             }
@@ -339,34 +310,43 @@ public class FirebaseDBHandler {
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(node);
         databaseReference.push().setValue(base64Image)
-                .addOnSuccessListener(aVoid -> {
-                    listener.onImageSaved();
-                })
-                .addOnFailureListener(aVoid -> {
-                    listener.onImageSaveFailed();
-                });
+                .addOnSuccessListener(aVoid -> listener.onImageSaved())
+                .addOnFailureListener(aVoid -> listener.onFailure(new Exception("Failed to save image")));
 
 
     }
 
 
-    // Interface to handle password retrieval callback
     public interface PasswordCallback {
         void onUserNotFound();
 
-        void onSucessfullLogin(User user);
+        void onSuccessfulLogin(User user);
 
         void onWrongPassword();
 
     }
 
-    public interface OnImageSavedListener {
+    public interface OnImageSavedListener extends FirebaseDBHandlerListener {
         void onImageSaved();
-
-        void onImageSaveFailed();
 
     }
 
+    public interface OnMedicineLoadedListener extends FirebaseDBHandlerListener {
+        void onMedicineLoaded(Medicine medicine);
+    }
+
+
+    public interface FirebaseDBHandlerListener {
+        void onFailure(Exception e);
+    }
+
+    public interface OnChangeListener extends FirebaseDBHandlerListener {
+        void onSuccess();
+    }
+
+    public interface OnPharmaciesLoadedListener extends FirebaseDBHandlerListener {
+        void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
+    }
 
 }
 
