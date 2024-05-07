@@ -21,6 +21,12 @@
         android:theme="@style/Theme.PharmacIST"
         tools:targetApi="31">
         <activity
+            android:name=".EnterQuantity"
+            android:exported="false" />
+        <activity
+            android:name=".AddMedicine"
+            android:exported="false" />
+        <activity
             android:name=".PharmacyInformationPannel"
             android:exported="false" />
         <activity
