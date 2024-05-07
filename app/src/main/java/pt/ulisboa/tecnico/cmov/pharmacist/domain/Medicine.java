@@ -16,9 +16,9 @@ public class Medicine implements Serializable {
         this.usage = "No usage information available.";
     }
 
-    public Medicine(String name, ImageView image, String usage) {
+    public Medicine(String name, String usage) {
         this.name = name;
-        this.boxPhoto = image;
+        this.boxPhoto = null;
         this.usage = usage;
     }
 

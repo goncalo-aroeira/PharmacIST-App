@@ -72,4 +72,14 @@
         app:layout_constraintTop_toBottomOf="@id/button_navigate_to_pharmacy"
         app:layout_constraintVertical_bias="0.106" />
 
+    <Button
+        android:id="@+id/button_add_medicine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Medicine Stock"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recyclerViewMedicines"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

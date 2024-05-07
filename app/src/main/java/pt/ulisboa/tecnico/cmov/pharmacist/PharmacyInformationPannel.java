@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -29,6 +30,8 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
+
+    private static final int REQUEST_ADD_MEDICINE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +78,15 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
             MedicineAdapter adapter = new MedicineAdapter(medicines, pharmacyInventory);
             recyclerViewMedicines.setAdapter(adapter);
+
+            Button addMedicineButton = findViewById(R.id.button_add_medicine);
+            addMedicineButton.setOnClickListener(view -> {
+                // Launch activity or dialog to capture medicine details
+                Intent add_medicine_intent = new Intent(PharmacyInformationPannel.this, AddMedicine.class);
+                add_medicine_intent.putExtra("pharmacy", pharmacy);
+                startActivityForResult(add_medicine_intent, REQUEST_ADD_MEDICINE);
+            });
+
         }
     }
 
@@ -101,4 +113,15 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             startActivity(mapIntent);
         }
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ADD_MEDICINE && resultCode == RESULT_OK && data != null) {
+            Medicine newMedicine = data.getParcelableExtra("new_medicine");
+            // Update your app's data structure and notify the RecyclerView adapter
+            // Add newMedicine to your list of medicines
+            // Notify RecyclerView adapter to update UI
+        }
+    }
+
 }
