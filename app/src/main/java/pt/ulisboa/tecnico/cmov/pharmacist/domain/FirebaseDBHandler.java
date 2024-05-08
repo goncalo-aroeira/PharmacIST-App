@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -57,6 +59,34 @@ public class FirebaseDBHandler {
             }
         });
     }
+
+    public void addNewMedicineIfNotExists(Medicine medicine, OnChangeListener listener) {
+        DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
+        Query query = medicinesRef.orderByChild("name").equalTo(medicine.getName());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()) {
+                    // Medicine does not exist, so add it
+                    medicinesRef.push().setValue(medicine).addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            listener.onSuccess();
+                        } else {
+                            listener.onFailure(task.getException());
+                        }
+                    });
+                } else {
+                    listener.onSuccess(); // If the medicine exists, proceed without adding it
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
 
     public void getMedicineByName(String medicineName, OnMedicineLoadedListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);

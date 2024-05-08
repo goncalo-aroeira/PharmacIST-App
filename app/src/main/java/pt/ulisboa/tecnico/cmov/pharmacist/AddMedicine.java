@@ -90,8 +90,51 @@ public class AddMedicine extends AppCompatActivity {
 
     private void addMedicine() {
         String name = editTextMedicineName.getText().toString();
-        String quantity = editTextMedicineQuantity.getText().toString();
+        int quantity = Integer.parseInt(editTextMedicineQuantity.getText().toString());
         String purpose = editTextMedicinePurpose.getText().toString();
-        
+
+        if (name.isEmpty() || purpose.isEmpty() || quantity <= 0) {
+            Toast.makeText(this, "Please fill all fields correctly.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Medicine newMedicine = new Medicine(name, purpose);
+
+        // First, add the medicine to the global list if it doesn't already exist
+        firebaseDBHandler.addNewMedicineIfNotExists(newMedicine, new FirebaseDBHandler.OnChangeListener() {
+            @Override
+            public void onSuccess() {
+                // Now, add the medicine to the pharmacy's inventory
+                if (pharmacy != null) {
+                    firebaseDBHandler.addMedicineToPharmacy(pharmacy.getName(), name, quantity, new FirebaseDBHandler.OnChangeListener() {
+                        @Override
+                        public void onSuccess() {
+                            Toast.makeText(AddMedicine.this, "Medicine added successfully!", Toast.LENGTH_SHORT).show();
+                            clearFields();
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Toast.makeText(AddMedicine.this, "Failed to add medicine to pharmacy: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(AddMedicine.this, "No pharmacy selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(AddMedicine.this, "Failed to add new medicine: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
+
+
+    private void clearFields() {
+        editTextMedicineName.setText("");
+        editTextMedicineQuantity.setText("");
+        editTextMedicinePurpose.setText("");
+    }
+
 }
