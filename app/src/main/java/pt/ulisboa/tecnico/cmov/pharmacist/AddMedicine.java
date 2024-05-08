@@ -100,35 +100,36 @@ public class AddMedicine extends AppCompatActivity {
 
         Medicine newMedicine = new Medicine(name, purpose);
 
-        // First, add the medicine to the global list if it doesn't already exist
+        // Check and add medicine to the global list if it doesn't exist
         firebaseDBHandler.addNewMedicineIfNotExists(newMedicine, new FirebaseDBHandler.OnChangeListener() {
             @Override
             public void onSuccess() {
-                // Now, add the medicine to the pharmacy's inventory
-                if (pharmacy != null) {
-                    firebaseDBHandler.addMedicineToPharmacy(pharmacy.getName(), name, quantity, new FirebaseDBHandler.OnChangeListener() {
-                        @Override
-                        public void onSuccess() {
-                            Toast.makeText(AddMedicine.this, "Medicine added successfully!", Toast.LENGTH_SHORT).show();
-                            clearFields();
-                        }
+                // Add the medicine to the pharmacy's inventory
+                firebaseDBHandler.addMedicineToPharmacy(pharmacy.getName(), name, quantity, new FirebaseDBHandler.OnChangeListener() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(AddMedicine.this, "Medicine added successfully!", Toast.LENGTH_SHORT).show();
+                        clearFields();
+                    }
 
-                        @Override
-                        public void onFailure(Exception e) {
-                            Toast.makeText(AddMedicine.this, "Failed to add medicine to pharmacy: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-                } else {
-                    Toast.makeText(AddMedicine.this, "No pharmacy selected", Toast.LENGTH_SHORT).show();
-                }
+                    @Override
+                    public void onFailure(Exception e) {
+                        Toast.makeText(AddMedicine.this, "Failed to add medicine to pharmacy: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override
             public void onFailure(Exception e) {
-                Toast.makeText(AddMedicine.this, "Failed to add new medicine: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                if (e.getMessage().equals("Medicine already exists in the list")) {
+                    Toast.makeText(AddMedicine.this, "This medicine already exists in the global list.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(AddMedicine.this, "Failed to add new medicine: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
+
 
 
     private void clearFields() {

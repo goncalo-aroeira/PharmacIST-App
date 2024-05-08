@@ -67,7 +67,7 @@ public class FirebaseDBHandler {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.exists()) {
-                    // Medicine does not exist, so add it
+                    // Medicine does not exist, add it
                     medicinesRef.push().setValue(medicine).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             listener.onSuccess();
@@ -76,7 +76,8 @@ public class FirebaseDBHandler {
                         }
                     });
                 } else {
-                    listener.onSuccess(); // If the medicine exists, proceed without adding it
+                    // Here handle the case when the medicine already exists
+                    listener.onFailure(new Exception("Medicine already exists in the list"));
                 }
             }
 
@@ -86,6 +87,7 @@ public class FirebaseDBHandler {
             }
         });
     }
+
 
 
     public void getMedicineByName(String medicineName, OnMedicineLoadedListener listener) {
