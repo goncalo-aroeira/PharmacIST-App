@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
@@ -35,6 +36,9 @@ public class PharmacyAdapter extends ArrayAdapter<Pharmacy> {
 
         TextView nameTextView = listItem.findViewById(R.id.name_text_view);
         nameTextView.setText(currentPharmacy.getName());
+
+        TextView distanceTextView = listItem.findViewById(R.id.number_text_view);
+        distanceTextView.setText(String.format(Locale.getDefault(), "%.2f km", currentPharmacy.getDistance()));
 
         TextView addressTextView = listItem.findViewById(R.id.address_text_view);
         addressTextView.setText(currentPharmacy.getAddress());
