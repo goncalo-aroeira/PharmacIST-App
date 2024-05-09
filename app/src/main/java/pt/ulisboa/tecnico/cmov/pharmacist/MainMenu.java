@@ -58,7 +58,7 @@ public class MainMenu extends AppCompatActivity {
         btnPharmacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainMenu.this, AddPharmacy.class);
+                Intent intent = new Intent(MainMenu.this, PharmaciesMenu.class);
                 startActivity(intent);
             }
         });

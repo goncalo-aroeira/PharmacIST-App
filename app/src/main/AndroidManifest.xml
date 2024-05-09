@@ -31,6 +31,9 @@
             android:name=".AddMedicine"
             android:exported="false" />
         <activity
+            android:name=".PharmaciesMenu"
+            android:exported="false" />
+        <activity
             android:name=".PharmacyInformationPannel"
             android:exported="false" />
         <activity
