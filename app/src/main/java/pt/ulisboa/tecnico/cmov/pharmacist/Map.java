@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -46,6 +47,8 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
     private Button buttonSearch;
     private Marker searchedLocationMarker;
     private ArrayList<Marker> pharmacyMarkers = new ArrayList<>();
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
+
 
 
     @Override
@@ -80,6 +83,13 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
                 }
             }
         });
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+            }, LOCATION_PERMISSION_REQUEST_CODE);
+        }
 
         // Initialize views for search functionality
         editTextSearch = findViewById(R.id.edit_text_search);
@@ -144,6 +154,9 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
                 return false;
             }
         });
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            gMap.setMyLocationEnabled(true);
+        }
     }
 
     private Pharmacy getPharmacyFromMarker(Marker marker) {
@@ -206,9 +219,7 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
 
     // Add this method to your activity to handle getting the current location
     private void getCurrentLocation() {
-        // Check if location permission is granted
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // Get the last known location
             FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                 @Override
@@ -216,11 +227,25 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
                     if (location != null) {
                         LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                         moveCameraToLocation(currentLocation);
+                    } else {
+                        Toast.makeText(Map.this, "Unable to determine your location", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
         }
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation();  // Only call getCurrentLocation if permissions are granted
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 
 // Call getCurrentLocation() when you want to center the map on the current location
 
