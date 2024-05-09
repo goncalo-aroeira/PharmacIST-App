@@ -177,6 +177,9 @@ public class FirebaseDBHandler {
                                 //print medicine
                         );
                         pharmacy.addMedicine(medicine, medicineSnapshot.child("quantity").getValue(Integer.class));
+                        // print medicine name
+                        Log.d("FirebaseDBHandler", "Medicine: " + medicine.getName());
+                        Log.d("FirebaseDBHandler", "Pharmacy: " + pharmacy.getName() + " Inventory: " + pharmacy.getInventory().get(medicine));
                     });
 
                     pharmacyList.add(pharmacy);

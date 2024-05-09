@@ -76,7 +76,7 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
             recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(this));
             List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
-            MedicineAdapter adapter = new MedicineAdapter(medicines, pharmacyInventory);
+            MedicineAdapter adapter = new MedicineAdapter(this, medicines, pharmacyInventory);
             recyclerViewMedicines.setAdapter(adapter);
 
             Button addMedicineButton = findViewById(R.id.button_add_medicine);

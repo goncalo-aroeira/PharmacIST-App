@@ -115,6 +115,8 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
             }
         }
         LatLng initial_location = geocodeAddress("Lisbon");
+
+        assert initial_location != null;
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initial_location, 12));
 
         gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {

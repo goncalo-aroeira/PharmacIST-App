@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,15 +13,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.MedicineInformationPannel;
 import pt.ulisboa.tecnico.cmov.pharmacist.R;
 
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
     private HashMap<Medicine, Integer> pharmacyInventory;
+    private Context context; // Need to pass context for starting an activity
 
-    public MedicineAdapter(List<Medicine> medicines, HashMap<Medicine, Integer> pharmacyInventory) {
+    public MedicineAdapter(Context context, List<Medicine> medicines, HashMap<Medicine, Integer> pharmacyInventory) {
+        this.context = context;
         this.medicines = medicines;
         this.pharmacyInventory = pharmacyInventory;
     }
@@ -34,12 +38,18 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
     @Override
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine medicine = medicines.get(position);
-        Log.d("MedicineAdapter", "Medicine: " + medicine.getName() + " Inventory: " + pharmacyInventory.size());
-        Integer quantityInteger = pharmacyInventory.get(medicine);
-        int quantity = (quantityInteger != null) ? quantityInteger : 0;
+        Integer quantity = pharmacyInventory.getOrDefault(medicine, 0);
         holder.textViewMedicineName.setText(medicine.getName());
         holder.textViewMedicineQuantity.setText("Quantity: " + quantity);
+
+        // Setting up the OnClickListener to open MedicineInformationActivity
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, MedicineInformationPannel.class);
+            intent.putExtra("medicine", medicine);  // Ensure Medicine class implements Serializable or Parcelable
+            context.startActivity(intent);
+        });
     }
+
 
     @Override
     public int getItemCount() {
