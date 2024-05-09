@@ -40,14 +40,12 @@ public class MedicineInformationPannel extends AppCompatActivity {
 
         // Initialize views
         medicineNameTextView = findViewById(R.id.medicineNameTextView);
-        medicinePurposeTextView = findViewById(R.id.medicinePurposeTextView);
         //medicineImageView = findViewById(R.id.medicineImageView);
 
         // Retrieve and display medicine data
         Medicine medicine = (Medicine) getIntent().getSerializableExtra("medicine");
         if (medicine != null) {
             medicineNameTextView.setText(medicine.getName());
-            medicinePurposeTextView.setText(medicine.getUsage());
 
             // If you are using an image loader library like Glide or Picasso, load the image
             // Example with Picasso:
@@ -99,5 +97,4 @@ public class MedicineInformationPannel extends AppCompatActivity {
         pharmacyAdapter = new PharmacyAdapter(this, pharmacies);
         pharmaciesListView.setAdapter(pharmacyAdapter);
     }
-
 }
