@@ -5,7 +5,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -25,13 +27,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
 
     private static final int REQUEST_ADD_MEDICINE = 1;
+
+    private FirebaseDBHandler dbHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +53,8 @@ public class PharmacyInformationPannel extends AppCompatActivity {
         // Retrieve data passed from the map activity
         Intent intent = getIntent();
         if (intent != null) {
+
+            dbHandler = new FirebaseDBHandler();
 
             Pharmacy pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");
 
@@ -71,6 +79,27 @@ public class PharmacyInformationPannel extends AppCompatActivity {
 
             Button navigateButton = findViewById(R.id.button_navigate_to_pharmacy);
             navigateButton.setOnClickListener(view -> navigateToPharmacy(pharmacyLocation));
+
+            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite);
+            addToFavoritesButton.setOnClickListener(view -> {
+                UserLocalStore userLocalStore = new UserLocalStore(this);
+                String userEmail = userLocalStore.getLoggedInEmail();
+                dbHandler.addPharmacyToUserFavorite(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnChangeListener() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d("PharmacyInformationPannel", "Pharmacy added to favorites");
+                        Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
+                    };
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.e("PharmacyInformationPannel", "Failed to add pharmacy to favorites", e);
+                        Toast.makeText(PharmacyInformationPannel.this, "Failed to add pharmacy to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            });
+
 
             // Initialize the RecyclerView for displaying medicines
             RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);

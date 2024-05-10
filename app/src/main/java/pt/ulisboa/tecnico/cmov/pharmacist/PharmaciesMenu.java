@@ -41,6 +41,11 @@ public class PharmaciesMenu extends AppCompatActivity {
     // UI
     SearchView searchBarValue;
     ListView lvPharmacies;
+
+    // Firebase
+    FirebaseDBHandler dbHandler = new FirebaseDBHandler();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,27 +57,10 @@ public class PharmaciesMenu extends AppCompatActivity {
             return insets;
         });
 
-    FirebaseDBHandler dbHandler = new FirebaseDBHandler();
     lvPharmacies = (ListView) findViewById(R.id.lvPharmacies);
     searchBarValue = (SearchView) findViewById(R.id.searchBarValue);
     btnAddPharmacy = (Button) findViewById(R.id.btnAddPharmacy);
 
-
-        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
-            @Override
-            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
-                Log.d("Medicine Activity Page", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
-                PharmaciesMenu.this.pharmacies = pharmacies;
-                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, pharmacies);
-                lvPharmacies.setAdapter(pharmacyAdapter);
-
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("Error", "MedicineActivity: Failed to load pharmacies", e);
-            }
-        });
         btnAddPharmacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -101,33 +89,41 @@ public class PharmaciesMenu extends AppCompatActivity {
         @Override
         public boolean onQueryTextSubmit(String query) {
             ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
+            // filter pharmacies by name or address
             for (Pharmacy pharmacy : pharmacies) {
-                for (Medicine medicine : pharmacy.getInventory().keySet()) {
-                    if (medicine.getName().toLowerCase().contains(query.toLowerCase())) {
-                        filteredPharmacies.add(pharmacy);
-                    }
+                if (pharmacy.getName().toLowerCase().contains(query.toLowerCase()) || pharmacy.getAddress().toLowerCase().contains(query.toLowerCase())) {
+                    filteredPharmacies.add(pharmacy);
                 }
             }
-            PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, filteredPharmacies);
-            lvPharmacies.setAdapter(pharmacyAdapter);
+            // if FilteredPharmacies is not empty, update adapter
+            if (filteredPharmacies.size() > 0) {
+                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, filteredPharmacies);
+                lvPharmacies.setAdapter(pharmacyAdapter);
+            } else {
+                // display information that no pharmacies were found
+
+            }
+
             return true;
         }
 
         @Override
         public boolean onQueryTextChange(String newText) {
             ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
-            for (Pharmacy pharmacy : pharmacies) {
-                for (Medicine medicine : pharmacy.getInventory().keySet()) {
-                    if (medicine.getName().toLowerCase().contains(newText.toLowerCase())) {
+            // filter pharmacies by name or address
+            if (pharmacies != null) {
+                for (Pharmacy pharmacy : pharmacies) {
+                    if (pharmacy.getName().toLowerCase().contains(newText.toLowerCase()) || pharmacy.getAddress().toLowerCase().contains(newText.toLowerCase())) {
                         filteredPharmacies.add(pharmacy);
                     }
                 }
             }
+
             PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, filteredPharmacies);
             lvPharmacies.setAdapter(pharmacyAdapter);
+
             return true;
         }
-
         
 
 
@@ -150,6 +146,29 @@ public class PharmaciesMenu extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                Log.d("Medicine Activity Page", "Pharmacies: " + pharmacies.size() + " pharmacies loaded.");
+                PharmaciesMenu.this.pharmacies = pharmacies;
+                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, pharmacies);
+                lvPharmacies.setAdapter(pharmacyAdapter);
+
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Error", "MedicineActivity: Failed to load pharmacies", e);
+            }
+        });
+
     }
 
 

@@ -39,7 +39,7 @@ import java.util.List;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
-public class Map extends AppCompatActivity implements OnMapReadyCallback {
+public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap gMap;
     private ArrayList<Pharmacy> pharmacies;

@@ -35,7 +35,7 @@ import java.util.Objects;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
-public class AddPharmacy extends AppCompatActivity {
+public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFragment.OnPhotoListener {
 
     Button btnSave, btnCancel;
 
@@ -44,8 +44,6 @@ public class AddPharmacy extends AppCompatActivity {
     FloatingActionButton fabNavigate;
 
     ImageView ivLocation;
-
-    ImageButton isFavorite;
 
     FirebaseDBHandler firebaseDBHandler;
 
@@ -73,17 +71,6 @@ public class AddPharmacy extends AppCompatActivity {
         etName = findViewById(R.id.etName);
         etAddress = findViewById(R.id.etAddress);
         ivLocation = findViewById(R.id.ivPhoto);
-        fabNavigate = findViewById(R.id.fabNavigate);
-        isFavorite = findViewById(R.id.isFavorite);
-
-        // Take photo or select from gallery
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
-        } else {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(intent, 100);
-
-        }
 
         etAddress.addTextChangedListener(new TextWatcher() {
             @Override
@@ -112,40 +99,12 @@ public class AddPharmacy extends AppCompatActivity {
             finish();
         });
 
-        // add to favorites
-        isFavorite.setOnClickListener(v -> {
-            // add to favorites in Users
-        });
-
-        fabNavigate.setOnClickListener(v -> {
-            // navigate to pharmacy
-        });
 
         ivLocation.setOnClickListener(v -> {
-            // wait for users photo to be received
             BottomSheetMenuFragment bottomSheetMenuFragment = BottomSheetMenuFragment.newInstance();
-            bottomSheetMenuFragment.setOnPhotoSelectedListener(photoUri -> {
-                String base64Image = convertImageToBase64(photoUri);
-                // save image in Firebase
-                FirebaseDBHandler firebaseDBHandler = new FirebaseDBHandler();
-                firebaseDBHandler.uploadImage(base64Image, PHARMACIES_NODE, new FirebaseDBHandler.OnImageSavedListener() {
-                    @Override
-                    public void onFailure(Exception e) {
-                        Toast.makeText(getApplicationContext(), "Failed to save image", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onImageSaved() {
-                        ivLocation.setImageURI(photoUri);
-                        Toast.makeText(getApplicationContext(), "Image saved successfully", Toast.LENGTH_SHORT).show();
-
-                    }
-                });
-            });
-            bottomSheetMenuFragment.show(getSupportFragmentManager(), BottomSheetMenuFragment.TAG);
-
+            bottomSheetMenuFragment.show(getSupportFragmentManager(), "bottomSheetMenuFragment");
+            //bottomSheetMenuFragment.setOnPhotoListener(AddPharmacy.this); // Pass the activity as the listener
         });
-
     }
 
 
@@ -200,4 +159,8 @@ public class AddPharmacy extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onOptionSelected(Bitmap image) {
+        ivLocation.setImageBitmap(image);
+    }
 }
