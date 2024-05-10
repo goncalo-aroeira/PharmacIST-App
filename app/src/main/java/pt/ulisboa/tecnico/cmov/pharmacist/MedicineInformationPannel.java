@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.LatLng;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -78,13 +79,13 @@ public class MedicineInformationPannel extends AppCompatActivity {
 
         medicine = (Medicine) getIntent().getSerializableExtra("medicine");
 
-        fetchAllPharmacies(medicine);
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         } else {
             getCurrentLocation();
         }
+        fetchAllPharmacies(medicine);
     }
 
     @Override
@@ -106,12 +107,8 @@ public class MedicineInformationPannel extends AppCompatActivity {
             public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
                 allPharmacies = pharmacies;
 
-                //print all pharmacies
-                for (Pharmacy pharmacy : allPharmacies) {
-                    Log.d("MedicineInformationPannel", "Pharmacy: " + pharmacy.getName() + " Quantity: " + pharmacy.getInventory().get(medicine));
-                }
-
                 filterPharmaciesWithMedicine(medicine);
+                calculateDistancesAndUpdateList();
             }
 
             @Override
@@ -139,25 +136,21 @@ public class MedicineInformationPannel extends AppCompatActivity {
     }
 
     private void sortPharmaciesByDistance() {
-        if (currentUserLocation == null || allPharmacies == null) {
-            Log.e("MedicineInformationPannel", "Current location or pharmacies data is not available.");
+        if (allPharmacies == null) {
+            Log.e("MedicineInformationPannel", "Pharmacies data is not available.");
             return;
         }
-
-        Collections.sort(allPharmacies, (pharmacy1, pharmacy2) -> {
-            LatLng loc1 = geocodeAddress(pharmacy1.getAddress());
-            LatLng loc2 = geocodeAddress(pharmacy2.getAddress());
-            double dist1 = calculateDistance(currentUserLocation, loc1);
-            double dist2 = calculateDistance(currentUserLocation, loc2);
-            return Double.compare(dist1, dist2);
-        });
-
+        Collections.sort(allPharmacies, Comparator.comparingDouble(Pharmacy::getDistance)
+        );
         updatePharmacyList(allPharmacies);
     }
+
+
 
     private double calculateDistance(LatLng start, LatLng end) {
         float[] results = new float[1];
         Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, results);
+        Log.d("MedicineInformationPannel", "Distance: " + results[0] / 1000 + " km");
         return results[0] / 1000; // Convert meters to kilometers
     }
 
@@ -196,6 +189,36 @@ public class MedicineInformationPannel extends AppCompatActivity {
             Log.e("Geocode", "Failed to geocode address", e);
         }
         return null;
+    }
+
+    private void calculateDistancesAndUpdateList() {
+        if (currentUserLocation == null) {
+            Log.e("MedicineInformationPannel", "Current location is not available.");
+            return;
+        }
+
+        FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    for (Pharmacy pharmacy : allPharmacies) {
+                        LatLng pharmacyLocation = geocodeAddress(pharmacy.getAddress());
+                        if (pharmacyLocation != null) {
+                            double distance = calculateDistance(currentUserLocation, pharmacyLocation);
+                            pharmacy.setDistance(distance);
+                        } else {
+                            pharmacy.setDistance(Double.MAX_VALUE);  // Set a high value if location is not found
+                        }
+                    }
+                    sortPharmaciesByDistance();
+                } else {
+                    Log.e("MedicineInformationPannel", "Location is null");
+                }
+            }).addOnFailureListener(e -> Log.e("MedicineInformationPannel", "Failed to get location", e));
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        }
     }
 
 
