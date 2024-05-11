@@ -84,21 +84,20 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             addToFavoritesButton.setOnClickListener(view -> {
                 UserLocalStore userLocalStore = new UserLocalStore(this);
                 String userEmail = userLocalStore.getLoggedInEmail();
-                dbHandler.addPharmacyToUserFavorite(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnChangeListener() {
+                dbHandler.toggleFavoriteStatus(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnChangeListener() {
                     @Override
                     public void onSuccess() {
-                        Log.d("PharmacyInformationPannel", "Pharmacy added to favorites");
-                        Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
-                    };
+                        Toast.makeText(PharmacyInformationPannel.this, "Favorite status toggled successfully", Toast.LENGTH_SHORT).show();
+                        // Optionally update the button icon here based on new status
+                    }
 
                     @Override
                     public void onFailure(Exception e) {
-                        Log.e("PharmacyInformationPannel", "Failed to add pharmacy to favorites", e);
-                        Toast.makeText(PharmacyInformationPannel.this, "Failed to add pharmacy to favorites", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PharmacyInformationPannel.this, "Failed to toggle favorite status", Toast.LENGTH_SHORT).show();
                     }
                 });
-
             });
+
 
 
             // Initialize the RecyclerView for displaying medicines

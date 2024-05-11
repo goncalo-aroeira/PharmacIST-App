@@ -225,16 +225,70 @@ public class FirebaseDBHandler {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                boolean alreadyFavorite = false;
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-                    userSnapshot.getRef().child(FAVORITES_NODE).push().setValue(pharmacyAddress);
-                    listener.onSuccess();
+                    // Check if the pharmacyAddress is already listed as a favorite
+                    for (DataSnapshot favoriteSnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
+                        if (favoriteSnapshot.getValue(String.class).equals(pharmacyAddress)) {
+                            alreadyFavorite = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyFavorite) {
+                        // Add the pharmacy if not already a favorite
+                        userSnapshot.getRef().child(FAVORITES_NODE).push().setValue(pharmacyAddress);
+                        listener.onSuccess();
+                    } else {
+                        // Handle the case where the pharmacy is already a favorite
+                        listener.onFailure(new Exception("Pharmacy already in favorites"));
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                System.out.println("Failed to read user data: " + databaseError.toException());
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+    public void toggleFavoriteStatus(String userEmail, String pharmacyAddress, OnChangeListener listener) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByChild("email").equalTo(userEmail);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    // Ensure you're working with a DataSnapshot here
+                    DataSnapshot favoritesSnapshot = userSnapshot.child(FAVORITES_NODE);
+                    boolean isAlreadyFavorite = false;
+                    String favoriteKeyToRemove = null;
+
+                    // Correct usage of getChildren() to iterate over favorites
+                    for (DataSnapshot favorite : favoritesSnapshot.getChildren()) {
+                        if (favorite.getValue(String.class).equals(pharmacyAddress)) {
+                            isAlreadyFavorite = true;
+                            favoriteKeyToRemove = favorite.getKey(); // Store the key of the favorite to remove
+                            break;
+                        }
+                    }
+
+                    if (isAlreadyFavorite && favoriteKeyToRemove != null) {
+                        // Remove the favorite using the key
+                        favoritesSnapshot.getRef().child(favoriteKeyToRemove).removeValue()
+                                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                                .addOnFailureListener(listener::onFailure);
+                    } else if (!isAlreadyFavorite) {
+                        // Add the pharmacy as a new favorite
+                        favoritesSnapshot.getRef().push().setValue(pharmacyAddress)
+                                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                                .addOnFailureListener(listener::onFailure);
+                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle error
-                System.out.println("Failed to read user data: " + databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
