@@ -38,6 +38,7 @@ import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 
 public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -48,6 +49,7 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
     private Marker searchedLocationMarker;
     private ArrayList<Marker> pharmacyMarkers = new ArrayList<>();
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
+    private ArrayList<String> favoritePharmacies;
 
 
 
@@ -104,6 +106,23 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
                 Toast.makeText(Map.this, "Please enter an address", Toast.LENGTH_SHORT).show();
             }
         });
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+
+        String email = userLocalStore.getLoggedInEmail();
+
+        dbHandler.getFavoritesPharmacies(email, new FirebaseDBHandler.OnGetFavoritesPharmacies() {
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Map", "Failed to load favorite pharmacies", e);
+            }
+
+            @Override
+            public void OnPharmaciesLoadedSuccessfully(ArrayList<String> favoritePharmacies) {
+                Log.d("Map", "Favorite pharmacies loaded: " + favoritePharmacies.size());
+                Map.this.favoritePharmacies = favoritePharmacies;
+            }
+        });
+
     }
 
     @Override
@@ -120,7 +139,15 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
             LatLng location = geocodeAddress(pharmacy.getAddress());
 
             if (location != null) {
-                Marker marker = googleMap.addMarker(new MarkerOptions().position(location).title(pharmacy.getName()));
+                boolean isFavorite = favoritePharmacies != null && favoritePharmacies.contains(pharmacy.getAddress());
+
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(location)
+                        .title(pharmacy.getName())
+                        .icon(BitmapDescriptorFactory.defaultMarker(
+                                isFavorite ? BitmapDescriptorFactory.HUE_AZURE : BitmapDescriptorFactory.HUE_RED));
+
+                Marker marker = googleMap.addMarker(markerOptions);
                 pharmacyMarkers.add(marker);
             }
         }

@@ -198,23 +198,16 @@ public class FirebaseDBHandler {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                ArrayList<Pharmacy> pharmacyList = new ArrayList<Pharmacy>();
+                ArrayList<String> addressList = new ArrayList<String>();
 
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    // print user snapshot
+                    Log.d("FirebaseDBHandler", "User: " + userSnapshot.child("name").getValue(String.class) + " " + userSnapshot.child("email").getValue(String.class));
                     for (DataSnapshot pharmacySnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
-                        usersRef.child(userSnapshot.getKey()).child(FAVORITES_NODE).push().child(pharmacySnapshot.getKey()).get().addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                // Add the pharmacy to the list
-                                Pharmacy pharmacy = new Pharmacy(
-                                        pharmacySnapshot.child("name").getValue(String.class),
-                                        pharmacySnapshot.child("address").getValue(String.class)
-                                );
-                                Log.d("FirebaseDBHandler", "Pharmacy: " + pharmacy.getName() + " " + pharmacy.getAddress());
-                                pharmacyList.add(pharmacy);
-                            }
-                        });
-                        listener.OnPharmaciesLoadedSuccessfully(pharmacyList);
+                        addressList.add(pharmacySnapshot.getValue(String.class));
+
                     }
+                    listener.OnPharmaciesLoadedSuccessfully(addressList);
                     listener.onFailure(new Exception("Failed to get the pharmacy"));
                 }
             }
@@ -375,7 +368,7 @@ public class FirebaseDBHandler {
     }
 
     public interface OnGetFavoritesPharmacies extends FirebaseDBHandlerListener {
-        void OnPharmaciesLoadedSuccessfully(ArrayList<Pharmacy> pharmacies);
+        void OnPharmaciesLoadedSuccessfully(ArrayList<String> pharmacies);
     }
 
 }
