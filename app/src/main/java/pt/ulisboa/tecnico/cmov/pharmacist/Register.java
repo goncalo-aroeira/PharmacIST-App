@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,16 +43,44 @@ public class Register extends AppCompatActivity {
         etPassword = findViewById(R.id.etPasswordRegister);
         btnRegister = findViewById(R.id.btnRegister);
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                userName = etUsername.getText().toString();
-                userEmail = etEmail.getText().toString();
-                userPass = etPassword.getText().toString();
-                firebaseDBHandler.addUser(new User(userName,userEmail,userPass));
-                userLocalStore.saveLoginDetails(userName, userEmail, userPass);
-                startActivity(new Intent(Register.this, MainMenu.class));
-            }
+        btnRegister.setOnClickListener(view -> {
+            User newUser = new User(etUsername.getText().toString(), etEmail.getText().toString(), etPassword.getText().toString());
+
+            firebaseDBHandler.registerUser(newUser, new FirebaseDBHandler.OnRegistrationListener() {
+                @Override
+                public void onRegistrationSuccess() {
+                    Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Register.this, MainMenu.class));
+                }
+
+                @Override
+                public void onRegistrationFailure(Exception e) {
+                    Toast.makeText(Register.this, "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onEmailExists() {
+                    Toast.makeText(Register.this, "Email already exists", Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onUsernameExists() {
+                    Toast.makeText(Register.this, "Username already exists", Toast.LENGTH_LONG).show();
+                }
+            });
         });
+
     }
+    private boolean isValidInput(String email, String password) {
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Enter a valid email address");
+            return false;
+        }
+        if (password.isEmpty() || password.length() < 6) {
+            etPassword.setError("Password must be at least 6 characters");
+            return false;
+        }
+        return true;
+    }
+
 }

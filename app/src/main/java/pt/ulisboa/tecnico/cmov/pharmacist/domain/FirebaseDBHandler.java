@@ -376,6 +376,47 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void registerUser(User user, OnRegistrationListener listener) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+
+        Query emailQuery = usersRef.orderByChild("email").equalTo(user.getEmail());
+        emailQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    listener.onEmailExists();
+                } else {
+                    // Check for username if necessary
+                    Query usernameQuery = usersRef.orderByChild("username").equalTo(user.getName());
+                    usernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                listener.onUsernameExists();
+                            } else {
+                                // Proceed with registration
+                                usersRef.push().setValue(user)
+                                        .addOnSuccessListener(aVoid -> listener.onRegistrationSuccess())
+                                        .addOnFailureListener(e -> listener.onRegistrationFailure(e));
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            listener.onRegistrationFailure(databaseError.toException());
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onRegistrationFailure(databaseError.toException());
+            }
+        });
+    }
+
+
     public void uploadImage(String base64Image, String node, OnImageSavedListener listener) {
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(node);
@@ -426,6 +467,14 @@ public class FirebaseDBHandler {
         void onRemovedFromFavorite();
         void onFailure(Exception e);
     }
+
+    public interface OnRegistrationListener {
+        void onRegistrationSuccess();
+        void onRegistrationFailure(Exception e);
+        void onEmailExists();
+        void onUsernameExists();
+    }
+
 
 
 }

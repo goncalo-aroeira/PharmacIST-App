@@ -82,6 +82,7 @@ public class MainMenu extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
     }
 
     ;
