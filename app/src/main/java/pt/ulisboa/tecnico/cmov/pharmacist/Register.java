@@ -23,7 +23,6 @@ public class Register extends AppCompatActivity {
     String userName, userEmail, userPass;
     FirebaseDBHandler firebaseDBHandler;
 
-    UserLocalStore userLocalStore = new UserLocalStore(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +36,7 @@ public class Register extends AppCompatActivity {
         });
 
         firebaseDBHandler = new FirebaseDBHandler();
+
 
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmailRegister);
