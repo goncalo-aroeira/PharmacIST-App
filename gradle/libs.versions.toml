@@ -21,6 +21,7 @@ gridlayout = "1.0.0"
 annotationJvm = "1.7.1"
 playServicesMaps = "18.2.0"
 playServicesLocation = "21.2.0"
+firebaseStorage = "21.0.0"
 
 [libraries]
 constraintlayout-v210 = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
@@ -44,6 +45,7 @@ gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref =
 annotation-jvm = { group = "androidx.annotation", name = "annotation-jvm", version.ref = "annotationJvm" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

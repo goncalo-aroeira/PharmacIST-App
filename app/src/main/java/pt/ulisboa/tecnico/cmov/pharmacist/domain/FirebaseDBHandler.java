@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -23,10 +26,18 @@ public class FirebaseDBHandler {
     private static final String USER_NODE = "user";
     private static final String FAVORITES_NODE = "favorites";
 
+    private static final String IMAGE_NODE = "image";
+
+    private static final String TAG = "FirebaseDBHandler";
+
+
     private final DatabaseReference databaseReference;
+    private final StorageReference storageReference;
+
 
     public FirebaseDBHandler() {
         databaseReference = FirebaseDatabase.getInstance().getReference();
+        storageReference = FirebaseStorage.getInstance().getReference();
     }
 
     public void addMedicine(Medicine medicine, OnChangeListener listener) {
@@ -37,7 +48,6 @@ public class FirebaseDBHandler {
 
     }
 
-    //Add medicine to pharmacy and quantity
     public void addMedicineToPharmacy(String pharmacyName, String medicineName, int quantity, OnChangeListener listener) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
         Query query = pharmaciesRef.orderByChild("name").equalTo(pharmacyName);
@@ -168,7 +178,8 @@ public class FirebaseDBHandler {
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
                     Pharmacy pharmacy = new Pharmacy(
                             snapshot.child("name").getValue(String.class),
-                            snapshot.child("address").getValue(String.class)
+                            snapshot.child("address").getValue(String.class),
+                            snapshot.child("imageURL").getValue(String.class) != null ? snapshot.child("imageURL").getValue(String.class) : ""
                     );
 
                     snapshot.child("inventory").getChildren().forEach(medicineSnapshot -> {
@@ -376,6 +387,7 @@ public class FirebaseDBHandler {
         });
     }
 
+    
     public void registerUser(User user, OnRegistrationListener listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
 
@@ -416,16 +428,42 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void uploadImageToStorage(Uri image, String imageName, OnImageSavedListener listener){
 
-    public void uploadImage(String base64Image, String node, OnImageSavedListener listener) {
+        StorageReference imageRef = storageReference.child(IMAGE_NODE).child("teste.jpg");
+        imageRef.putFile(image).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                listener.onImageSaved(imageName);
+                //saveImageUrlToDatabase( IMAGE_NODE + '/' + finalImageName,  listener);
+            } else {
+                listener.onFailure(task.getException());
+            }
+        });
+    }
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(node);
-        databaseReference.push().setValue(base64Image)
-                .addOnSuccessListener(aVoid -> listener.onImageSaved())
-                .addOnFailureListener(aVoid -> listener.onFailure(new Exception("Failed to save image")));
+    private void saveImageUrlToDatabase(String imageUrl, OnImageSavedListener listener) {
 
+        //gs://pharmacist-2024.appspot.com/image/teste.jpg
+
+
+        DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference(IMAGE_NODE);
+        String key = databaseRef.push().getKey();
+
+        databaseRef.child(key).setValue(imageUrl)
+                .addOnSuccessListener(aVoid -> {
+                    // Image URL saved successfully in Realtime Database
+                    Log.d(TAG, "Image URL saved in Realtime Database");
+                    listener.onImageSaved(imageUrl);
+                })
+                .addOnFailureListener(e -> {
+                    // Handle errors
+                    Log.e(TAG, "Failed to save image URL in Realtime Database: " + e.getMessage());
+                    listener.onFailure(e);
+                });
 
     }
+
+
 
 
     public interface PasswordCallback {
@@ -438,7 +476,7 @@ public class FirebaseDBHandler {
     }
 
     public interface OnImageSavedListener extends FirebaseDBHandlerListener {
-        void onImageSaved();
+        void onImageSaved(String imageName);
 
     }
 

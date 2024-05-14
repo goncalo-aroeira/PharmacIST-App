@@ -11,21 +11,22 @@ public class Pharmacy implements Serializable {
 
     String name;
     String address; // Missing location on map
-    ImageView picture;
+    //ImageView picture;
+
+    private String imageURL;
     double distance;
     private HashMap<Medicine, Integer> inventory = new HashMap<Medicine, Integer>();
-
-
-    public Pharmacy(String name, String address,  ImageView image) {
-        this.name = name;
-        this.address = address;
-        this.picture = image;
-    }
 
     public Pharmacy(String name, String address) {
         this.name = name;
         this.address = address;
-        this.picture = null;
+        this.imageURL = "";
+    }
+
+    public Pharmacy(String name, String address, String imageURL) {
+        this.name = name;
+        this.address = address;
+        this.imageURL = imageURL;
     }
 
     public String getName() {
@@ -40,12 +41,12 @@ public class Pharmacy implements Serializable {
         this.address = address;
     }
 
-    public ImageView getPicture() {
-        return picture;
+    public String getImageURL() {
+        return imageURL;
     }
 
-    public void setPicture(ImageView picture) {
-        this.picture = picture;
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
     }
 
     public void setDistance(double distance) {
