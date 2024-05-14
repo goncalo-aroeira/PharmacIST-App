@@ -43,7 +43,7 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
     EditText etName, etAddress;
     ImageView ivLocation;
-    Button btnSave, btnCancel, btnPickLocation, btnCurrentLocation;
+    Button btnPickLocation, btnCurrentLocation;
     FirebaseDBHandler firebaseDBHandler;
     Uri imageUri;
 
