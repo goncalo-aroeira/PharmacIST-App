@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -15,6 +17,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -430,37 +433,29 @@ public class FirebaseDBHandler {
 
     public void uploadImageToStorage(Uri image, String imageName, OnImageSavedListener listener){
 
-        StorageReference imageRef = storageReference.child(IMAGE_NODE).child("teste.jpg");
-        imageRef.putFile(image).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                listener.onImageSaved(imageName);
-                //saveImageUrlToDatabase( IMAGE_NODE + '/' + finalImageName,  listener);
-            } else {
-                listener.onFailure(task.getException());
-            }
-        });
-    }
+        StorageReference imageRef = storageReference.child(IMAGE_NODE);
+        imageRef.child(imageName + ".png").putFile(image)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Log.d(TAG, "onSuccess: Image uploaded successfully");
 
-    private void saveImageUrlToDatabase(String imageUrl, OnImageSavedListener listener) {
+                        Task<Uri> downloadUri = taskSnapshot.getStorage().getDownloadUrl();
+                        Log.d(TAG, "onSuccess: downloadUri: " + downloadUri.getResult().toString());
 
-        //gs://pharmacist-2024.appspot.com/image/teste.jpg
-
-
-        DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference(IMAGE_NODE);
-        String key = databaseRef.push().getKey();
-
-        databaseRef.child(key).setValue(imageUrl)
-                .addOnSuccessListener(aVoid -> {
-                    // Image URL saved successfully in Realtime Database
-                    Log.d(TAG, "Image URL saved in Realtime Database");
-                    listener.onImageSaved(imageUrl);
+                        if (downloadUri.isSuccessful()) {
+                            String generatedFilePath = downloadUri.getResult().toString();
+                            Log.d(TAG, "onSuccess: generatedFilePath: " + generatedFilePath);
+                            listener.onImageSaved(generatedFilePath);
+                        }
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    // Handle errors
-                    Log.e(TAG, "Failed to save image URL in Realtime Database: " + e.getMessage());
-                    listener.onFailure(e);
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        listener.onFailure(e);
+                    }
                 });
-
     }
 
 

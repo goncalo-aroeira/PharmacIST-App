@@ -7,12 +7,13 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,16 +22,18 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import java.io.ByteArrayOutputStream;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Objects;
+import java.util.List;
+import java.util.Locale;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
@@ -38,12 +41,14 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFragment.OnButtonClickListener {
 
     private static final String TAG = "AddPharmacy";
+
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int REQUEST_CAMERA_PERMISSION = 100;
-    Button btnSave, btnCancel;
+    Button btnSave, btnCancel, btnPickLocation, btnCurrentLocation;
+    private FusedLocationProviderClient fusedLocationClient;
 
     EditText etName, etAddress;
     ImageView ivLocation;
-    Button btnPickLocation, btnCurrentLocation;
     FirebaseDBHandler firebaseDBHandler;
     Uri imageUri;
 
@@ -52,7 +57,6 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
     private ActivityResultLauncher<Intent> galleryLauncher;
 
     ActivityResultLauncher<Intent> takePictureResultLauncher;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +68,25 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         etName = findViewById(R.id.etName);
         etAddress = findViewById(R.id.etAddress);
         ivLocation = findViewById(R.id.ivPhoto);
+        btnSave = findViewById(R.id.btnSave);
+        btnCancel = findViewById(R.id.btnCancel);
+        btnPickLocation = findViewById(R.id.btnPickLocation);
+        btnCurrentLocation = findViewById(R.id.btnCurrentLocation);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        btnPickLocation.setOnClickListener(v -> {
+            // Implement logic to pick location on the map
+        });
+
+        btnCurrentLocation.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            } else {
+                getCurrentLocation();
+            }
+        });
 
 
         cameraLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -115,20 +137,17 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         String name = etName.getText().toString();
         String address = etAddress.getText().toString();
 
-        /*if (name.isEmpty() || address.isEmpty()) {
+        if (name.isEmpty() || address.isEmpty()) {
             Toast toast = Toast.makeText(getApplicationContext(), "Please fill all the fields", Toast.LENGTH_SHORT);
             toast.show();
             return;
-        }*/
+        }
 
 
-        Log.d(TAG, "savePharmacy: imageUri : " + imageUri);
         firebaseDBHandler.uploadImageToStorage(imageUri, address, new FirebaseDBHandler.OnImageSavedListener() {
             @Override
-            public void onImageSaved(String imageName) {
-                Log.d(TAG, "onImageSaved: Image saved successfully : " + imageName);
-                Toast toast = Toast.makeText(getApplicationContext(), "Image saved successfully : " + imageName, Toast.LENGTH_SHORT);
-                toast.show();
+            public void onImageSaved(String imageURL) {
+                Log.d(TAG, "onImageSaved: Image saved successfully : " + imageURL);
             }
 
 
@@ -139,7 +158,6 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
                 e.printStackTrace();
             }
         });
-
 
 
         Pharmacy pharmacy = new Pharmacy(name, address);
@@ -224,4 +242,47 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         return imageUri;
     }
 
+    private void getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    double latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    updateLocationAddress(latitude, longitude);
+                } else {
+                    Toast.makeText(AddPharmacy.this, "Location not detected", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void updateLocationAddress(double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                etAddress.setText(address.getAddressLine(0)); // Update the EditText with the first address line.
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Unable to get street address", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    // onRequestPermissionsResult to handle the case where the user grants the permission
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation();
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }
