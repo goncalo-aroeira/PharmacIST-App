@@ -57,6 +57,8 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
     private ActivityResultLauncher<Intent> galleryLauncher;
 
     ActivityResultLauncher<Intent> takePictureResultLauncher;
+    private ActivityResultLauncher<Intent> mapPickerLauncher;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +131,19 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
             BottomSheetMenuFragment bottomSheetMenuFragment = BottomSheetMenuFragment.newInstance();
             bottomSheetMenuFragment.setOnButtonClickListener(this);
             bottomSheetMenuFragment.show(getSupportFragmentManager(), "bottomSheetMenuFragment");
+        });
+
+        mapPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                double latitude = result.getData().getDoubleExtra("latitude", 0);
+                double longitude = result.getData().getDoubleExtra("longitude", 0);
+                updateLocationAddress(latitude, longitude);
+            }
+        });
+
+        btnPickLocation.setOnClickListener(v -> {
+            Intent intent = new Intent(AddPharmacy.this, MapPicker.class);
+            mapPickerLauncher.launch(intent);
         });
     }
 
