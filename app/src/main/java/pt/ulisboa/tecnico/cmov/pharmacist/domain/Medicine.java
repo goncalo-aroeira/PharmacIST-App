@@ -4,20 +4,24 @@ import android.widget.ImageView;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Medicine implements Serializable {
 
+    String id;
     String name;
     ImageView boxPhoto;
     String usage;
 
     public Medicine(String name) {
+        this.id = null;
         this.name = name;
         this.boxPhoto = null;
         this.usage = "No usage information available.";
     }
 
     public Medicine(String name, String usage) {
+        this.id = null;
         this.name = name;
         this.boxPhoto = null;
         this.usage = usage;
@@ -46,6 +50,14 @@ public class Medicine implements Serializable {
         if (obj == null || getClass() != obj.getClass()) return false;
         Medicine medicine = (Medicine) obj;
         return Objects.equals(name, medicine.name);
+    }
+
+    public void generateId() {
+        this.id = UUID.randomUUID().toString();
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override
