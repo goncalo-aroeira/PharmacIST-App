@@ -73,6 +73,7 @@ public class FirebaseDBHandler {
         });
     }
 
+
     public void addNewMedicineIfNotExists(Medicine medicine, OnChangeListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
         Query query = medicinesRef.orderByChild("name").equalTo(medicine.getName());
@@ -136,7 +137,6 @@ public class FirebaseDBHandler {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
         medicinesRef.child(medicineId).setValue(updatedMedicine);
     }
-
     public void addPharmacy(Pharmacy pharmacy, OnChangeListener listener) {
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE);
 
@@ -145,6 +145,7 @@ public class FirebaseDBHandler {
                     listener.onSuccess();
                 })
                 .addOnFailureListener(listener::onFailure);
+
     };
 
     public void removePharmacy(String pharmacyName, OnChangeListener listener) {
@@ -204,6 +205,29 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void getAllMedicines(OnMedicinesLoadedListener listener) {
+        DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
+        ArrayList<Medicine> medicineList = new ArrayList<>();
+        medicinesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (DataSnapshot snapshot : task.getResult().getChildren()) {
+                    Medicine medicine = new Medicine(
+                            snapshot.child("name").getValue(String.class),
+                            snapshot.child("usage").getValue(String.class)
+                    );
+                    if (medicine != null) {
+                        medicineList.add(medicine);
+                    }
+                }
+                listener.onMedicinesLoaded(medicineList);
+            } else {
+                listener.onFailure(task.getException());
+            }
+        });
+    }
+
+
+
     public void getFavoritesPharmacies(String userEmail, OnGetFavoritesPharmacies listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
         Query query = usersRef.orderByChild("email").equalTo(userEmail);
@@ -232,6 +256,11 @@ public class FirebaseDBHandler {
             }
         });
     }
+    public interface OnMedicinesLoadedListener extends FirebaseDBHandlerListener {
+        void onMedicinesLoaded(ArrayList<Medicine> medicines);
+
+    }
+
 
     public void addPharmacyToUserFavorite(String userEmail, String pharmacyAddress, OnChangeListener listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
