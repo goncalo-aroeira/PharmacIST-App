@@ -4,6 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -64,6 +66,7 @@ public class FirebaseDBHandler {
         });
     }
 
+
     public void addNewMedicineIfNotExists(Medicine medicine, OnChangeListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
         Query query = medicinesRef.orderByChild("name").equalTo(medicine.getName());
@@ -112,11 +115,31 @@ public class FirebaseDBHandler {
         });
     }
 
+    public void getAllMedicines(OnMedicinesLoadedListener listener) {
+        DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
+        ArrayList<Medicine> medicineList = new ArrayList<>();
+        medicinesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (DataSnapshot snapshot : task.getResult().getChildren()) {
+                    Medicine medicine = new Medicine(
+                            snapshot.child("name").getValue(String.class),
+                            snapshot.child("usage").getValue(String.class)
+                    );
+                    if (medicine != null) {
+                        medicineList.add(medicine);
+                    }
+                }
+                listener.onMedicinesLoaded(medicineList);
+            } else {
+                listener.onFailure(task.getException());
+            }
+        });
+    }
+
 
     /* =============================================================================================
                                            PHARMACY METHODS
       ============================================================================================= */
-
     public void addPharmacy(Pharmacy pharmacy, OnChangeListener listener) {
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE);
         pharmacyRef.child(pharmacy.getId()).setValue(pharmacy)
@@ -125,6 +148,33 @@ public class FirebaseDBHandler {
                 })
                 .addOnFailureListener(listener::onFailure);
     };
+
+
+    public void removePharmacy(String pharmacyName, OnChangeListener listener) {
+        DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
+        // Query the database to find the pharmacy with the specified name
+        Query query = pharmaciesRef.orderByChild("name").equalTo(pharmacyName);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    snapshot.getRef().removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                listener.onSuccess();
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure(new Exception(databaseError.getMessage()));
+            }
+        });
+    }
 
     public void getAllPharmacies(OnPharmaciesLoadedListener listener) {
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
@@ -383,7 +433,11 @@ public class FirebaseDBHandler {
         void onUsernameExists();
     }
 
+    
+    public interface OnMedicinesLoadedListener extends FirebaseDBHandlerListener {
+        void onMedicinesLoaded(ArrayList<Medicine> medicines);
 
+    }
 
 }
 
