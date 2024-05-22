@@ -10,20 +10,20 @@ public class Medicine implements Serializable {
 
     String id;
     String name;
-    ImageView boxPhoto;
+    Byte[] imageBytes;
     String usage;
 
     public Medicine(String name) {
         this.id = null;
         this.name = name;
-        this.boxPhoto = null;
+        this.imageBytes = null;
         this.usage = "No usage information available.";
     }
 
     public Medicine(String name, String usage) {
         this.id = null;
         this.name = name;
-        this.boxPhoto = null;
+        this.imageBytes = null;
         this.usage = usage;
     }
 
@@ -31,13 +31,14 @@ public class Medicine implements Serializable {
         return name;
     }
 
-    public ImageView getImage() {
-        return boxPhoto;
+    public Byte[] getImageBytes() {
+        return imageBytes;
     }
 
-    public void setImage(ImageView image) {
-        this.boxPhoto = image;
+    public void setImageBytes(Byte[] imageBytes) {
+        this.imageBytes = imageBytes;
     }
+
     public String getUsage() {
         return usage;
     }

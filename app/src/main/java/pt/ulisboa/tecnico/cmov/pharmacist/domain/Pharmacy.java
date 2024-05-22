@@ -9,24 +9,37 @@ import java.util.Objects;
 
 public class Pharmacy implements Serializable {
 
-    String name;
-    String address; // Missing location on map
-    //ImageView picture;
-
-    private String imageURL;
+    private String id, name, address, imageBytes;
     double distance;
     private HashMap<Medicine, Integer> inventory = new HashMap<Medicine, Integer>();
 
     public Pharmacy(String name, String address) {
+        this.id= null;
         this.name = name;
         this.address = address;
-        this.imageURL = "";
+        this.imageBytes = null;
     }
 
-    public Pharmacy(String name, String address, String imageURL) {
+    public Pharmacy(String name, String address, String imageBytes) {
+        this.id=null;
         this.name = name;
         this.address = address;
-        this.imageURL = imageURL;
+        this.imageBytes = imageBytes;
+    }
+
+    public Pharmacy(String id, String name, String address, String imageBytes) {
+        this.id=id;
+        this.name = name;
+        this.address = address;
+        this.imageBytes = imageBytes;
+    }
+
+    public void generateId() {
+        this.id = java.util.UUID.randomUUID().toString();
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
@@ -41,12 +54,12 @@ public class Pharmacy implements Serializable {
         this.address = address;
     }
 
-    public String getImageURL() {
-        return imageURL;
+    public String getImageBytes() {
+        return imageBytes;
     }
 
-    public void setImageURL(String imageURL) {
-        this.imageURL = imageURL;
+    public void setImageBytes(String imageBytes) {
+        this.imageBytes = imageBytes;
     }
 
     public void setDistance(double distance) {

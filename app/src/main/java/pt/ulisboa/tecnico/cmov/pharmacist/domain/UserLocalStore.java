@@ -12,6 +12,8 @@ public class UserLocalStore {
     private static final String KEY_NAME = "name";
     private static final String KEY_PASSWORD = "password";
 
+    private static final String KEY_ID = "id";
+
     private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
 
     SharedPreferences sharedPreferences;
@@ -20,7 +22,8 @@ public class UserLocalStore {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    public void saveLoginDetails(String name, String email, String password) {
+    public void saveLoginDetails(String id, String name, String email, String password) {
+        sharedPreferences.edit().putString(KEY_ID, id).apply();
         sharedPreferences.edit().putString(KEY_NAME, name).apply();
         sharedPreferences.edit().putString(KEY_EMAIL, email).apply();
         sharedPreferences.edit().putString(KEY_PASSWORD, password).apply();
@@ -48,6 +51,9 @@ public class UserLocalStore {
         return sharedPreferences.getBoolean(KEY_IS_LOGGEDIN, false);
     }
 
+    public String getLoggedInId() {
+        return sharedPreferences.getString(KEY_ID, "");
+    }
     ;
 
 }

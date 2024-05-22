@@ -4,21 +4,31 @@ import java.util.ArrayList;
 
 public class User {
 
-    String name, password, email;
+    String name, password, email, id;
     ArrayList<Pharmacy> favoritePharmacy;
 
     public User(String name, String email, String password) {
+        this.id = null;
         this.name = name;
         this.email = email;
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
     }
 
-    public User(String email, String password) {
+    public User(String id, String name, String email, String password) {
+        this.id = id;
         this.name = email;
         this.email = email;
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
+    }
+
+    public void generateId() {
+        this.id = java.util.UUID.randomUUID().toString();
+    }
+
+    public String getId() {
+        return this.id;
     }
 
     public void addPharmacyToFavorites(Pharmacy pharmacy) {
