@@ -1,15 +1,18 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -35,8 +38,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
 
-    private static final int REQUEST_ADD_MEDICINE = 1;
-
+    private ActivityResultLauncher<Intent> addMedicineLauncher;
     private FirebaseDBHandler dbHandler;
 
     @Override
@@ -50,89 +52,124 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             return insets;
         });
 
-        // Retrieve data passed from the map activity
+        // Initialize the launcher for AddMedicine activity result
+        addMedicineLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        handleAddMedicineResult(result.getData());
+                    }
+                });
+
         Intent intent = getIntent();
         if (intent != null) {
-
             dbHandler = new FirebaseDBHandler();
 
             Pharmacy pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");
-
-            String pharmacyName = pharmacy.getName();
-            String pharmacyAddress = pharmacy.getAddress();
-            HashMap<Medicine, Integer> pharmacyInventory = pharmacy.getInventory();
-
             LatLng pharmacyLocation = intent.getParcelableExtra("pharmacy_location");
-            //HashMap<String, Integer> pharmacyInventory = (HashMap<String, Integer>) intent.getSerializableExtra("pharmacy_inventory");
 
-            populateDetailView(pharmacyName, pharmacyAddress);
-            // Initialize the map fragment
-            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(googleMap -> {
-                // Move the camera to focus on the pharmacy's location
-                if (pharmacyLocation != null) {
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pharmacyLocation, 15));
-                    // Add a marker to indicate the pharmacy's location
-                    googleMap.addMarker(new MarkerOptions().position(pharmacyLocation).title(pharmacyName));
-                }
-            });
+            if (pharmacy == null || pharmacyLocation == null) {
+                Toast.makeText(this, "Failed to load pharmacy information", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
 
-            Button navigateButton = findViewById(R.id.button_navigate_to_pharmacy);
-            navigateButton.setOnClickListener(view -> navigateToPharmacy(pharmacyLocation));
-
-            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite);
-            addToFavoritesButton.setOnClickListener(view -> {
-                UserLocalStore userLocalStore = new UserLocalStore(this);
-                String userEmail = userLocalStore.getLoggedInEmail();
-                dbHandler.toggleFavoriteStatus(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnFavoriteToggleListener() {
-                    @Override
-                    public void onAddedToFavorite() {
-                        Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onRemovedFromFavorite() {
-                        Toast.makeText(PharmacyInformationPannel.this, "Pharmacy removed from favorites", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(Exception e) {
-                        Toast.makeText(PharmacyInformationPannel.this, "Failed to update favorites: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            });
-
-
-
-
-            // Initialize the RecyclerView for displaying medicines
-            RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
-            recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(this));
-            List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
-            MedicineAdapter adapter = new MedicineAdapter(this, medicines, pharmacyInventory);
-            recyclerViewMedicines.setAdapter(adapter);
-
-            Button addMedicineButton = findViewById(R.id.button_add_medicine);
-            addMedicineButton.setOnClickListener(view -> {
-                // Launch activity or dialog to capture medicine details
-                Intent add_medicine_intent = new Intent(PharmacyInformationPannel.this, AddMedicine.class);
-                add_medicine_intent.putExtra("pharmacy", pharmacy);
-                startActivityForResult(add_medicine_intent, REQUEST_ADD_MEDICINE);
-            });
-
+            populateDetailView(pharmacy);
+            setupMap(pharmacyLocation, pharmacy.getName());
+            setupButtons(pharmacy, pharmacyLocation);
+            setupRecyclerView(pharmacy.getInventory());
         }
     }
 
-    private void populateDetailView(String name, String address) {
+
+    private void populateDetailView(Pharmacy pharmacy) {
         // Find TextViews in the layout
         TextView textViewName = findViewById(R.id.textView_pharmacy_name);
         TextView textViewAddress = findViewById(R.id.textView_pharmacy_address);
-        // Find more TextViews as needed
 
         // Set text to display in the TextViews
-        textViewName.setText(name);
-        textViewAddress.setText(address);
-        // Set more data to other TextViews as needed
+        textViewName.setText(pharmacy.getName());
+        textViewAddress.setText(pharmacy.getAddress());
+
+        // Convert and set the pharmacy image if available
+        String imageBytes = pharmacy.getImageBytes();
+        Bitmap imageBitmap = utils.convertCompressedByteArrayToBitmap(imageBytes);
+        // Assuming there's an ImageView to set the bitmap
+        ImageView pharmacyImageView = findViewById(R.id.ivPhoto);
+        pharmacyImageView.setImageBitmap(imageBitmap);
+    }
+
+    private void setupMap(LatLng pharmacyLocation, String pharmacyName) {
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        assert mapFragment != null;
+        mapFragment.getMapAsync(googleMap -> {
+            // Move the camera to focus on the pharmacy's location
+            if (pharmacyLocation != null) {
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pharmacyLocation, 15));
+                // Add a marker to indicate the pharmacy's location
+                googleMap.addMarker(new MarkerOptions().position(pharmacyLocation).title(pharmacyName));
+            }
+        });
+    }
+
+    private void setupButtons(Pharmacy pharmacy, LatLng pharmacyLocation) {
+        setupNavigateButton(pharmacyLocation);
+        setupAddToFavoritesButton(pharmacy);
+        setupAddMedicineButton(pharmacy);
+    }
+
+    private void setupNavigateButton(LatLng location) {
+        Button navigateButton = findViewById(R.id.button_navigate_to_pharmacy);
+        navigateButton.setOnClickListener(view -> navigateToPharmacy(location));
+    }
+
+    private void setupAddToFavoritesButton(Pharmacy pharmacy) {
+        ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite);
+        addToFavoritesButton.setOnClickListener(view -> {
+            UserLocalStore userLocalStore = new UserLocalStore(this);
+            String userEmail = userLocalStore.getLoggedInEmail();
+            dbHandler.toggleFavoriteStatus(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnFavoriteToggleListener() {
+                @Override
+                public void onAddedToFavorite() {
+                    Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onRemovedFromFavorite() {
+                    Toast.makeText(PharmacyInformationPannel.this, "Pharmacy removed from favorites", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Toast.makeText(PharmacyInformationPannel.this, "Failed to update favorites: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+    }
+
+    private void setupAddMedicineButton(Pharmacy pharmacy) {
+        Button addMedicineButton = findViewById(R.id.button_add_medicine);
+        addMedicineButton.setOnClickListener(view -> {
+            // Launch activity to capture medicine details
+            Intent addMedicineIntent = new Intent(PharmacyInformationPannel.this, AddMedicine.class);
+            addMedicineIntent.putExtra("pharmacy", pharmacy);
+            addMedicineLauncher.launch(addMedicineIntent);
+        });
+    }
+
+    private void handleAddMedicineResult(Intent data) {
+        Medicine newMedicine = data.getParcelableExtra("new_medicine");
+        // Update your app's data structure and notify the RecyclerView adapter
+        // Add newMedicine to your list of medicines
+        // Notify RecyclerView adapter to update UI
+    }
+
+    private void setupRecyclerView(HashMap<Medicine, Integer> pharmacyInventory) {
+        RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
+        recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(this));
+        List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
+        MedicineAdapter adapter = new MedicineAdapter(this, medicines, pharmacyInventory);
+        recyclerViewMedicines.setAdapter(adapter);
     }
 
     private void navigateToPharmacy(LatLng location) {
@@ -146,15 +183,4 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             startActivity(mapIntent);
         }
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ADD_MEDICINE && resultCode == RESULT_OK && data != null) {
-            Medicine newMedicine = data.getParcelableExtra("new_medicine");
-            // Update your app's data structure and notify the RecyclerView adapter
-            // Add newMedicine to your list of medicines
-            // Notify RecyclerView adapter to update UI
-        }
-    }
-
 }

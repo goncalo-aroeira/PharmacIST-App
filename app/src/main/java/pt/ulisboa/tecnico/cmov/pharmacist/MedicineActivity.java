@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -9,9 +10,13 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -19,9 +24,12 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.databinding.ActivityAddMedicineBinding;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
@@ -39,6 +47,26 @@ public class MedicineActivity extends AppCompatActivity {
     // UI
     SearchView searchBarValue;
     ListView lvPharmacies;
+    private ActivityAddMedicineBinding binding;
+
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    scanBarcode();
+                } else {
+                    Toast.makeText(this, "Permission denied to access camera", Toast.LENGTH_SHORT).show();
+                }
+            });
+    private final ActivityResultLauncher<ScanOptions> qrCodeScannerLauncher =
+            registerForActivityResult(new ScanContract(), result -> {
+                if (result.getContents() == null) {
+                    Toast.makeText(this, "No barcode scanned", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d("AddMedicine", "qrCodeScannerLauncher: barcde result" + result.getContents());
+                    Toast.makeText(this, "Scanned barcode: " + result.getContents(), Toast.LENGTH_SHORT).show();
+                    setResult(result.getContents());
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,9 +161,11 @@ public class MedicineActivity extends AppCompatActivity {
                 menuItem.getItemId();
                 if (menuItem.getItemId() == scanItem.getItemId()) {
                     // Start scan barcode activity
-                    handleScanBarcode();
+                    scanBarcode();
                 } else if (menuItem.getItemId() == addItem.getItemId()) {
                     // Start add manually activity
+                    Intent intent = new Intent(context, CreateMedicine.class);
+                    startActivity(intent);
                     Log.d("Clicked Event", "onMenuItemClick: " + addItem.getItemId());
                 } else if (menuItem.getItemId() == editItem.getItemId()) {
                     // Start add manually activity
@@ -158,14 +188,6 @@ public class MedicineActivity extends AppCompatActivity {
         popup.show();
     }
 
-    private void handleScanBarcode() {
-        Log.d("Scan Barcode", "handleScanBarcode: ");
-        IntentIntegrator integrator = new IntentIntegrator(MedicineActivity.this);
-        integrator.setOrientationLocked(true);
-        integrator.initiateScan();
-    }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -176,5 +198,34 @@ public class MedicineActivity extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void scanBarcode() {
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan a barcode");
+        options.setCameraId(0);
+        options.setBeepEnabled(true);
+        options.setBarcodeImageEnabled(true);
+        options.setOrientationLocked(true);
+
+        qrCodeScannerLauncher.launch(options);
+    }
+
+    private void checkPermissionAndShowActivity(Context context) {
+        if (ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED ) {
+            scanBarcode();
+        }else if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
+            Toast.makeText(context, "Camera permission is needed to scan barcode", Toast.LENGTH_SHORT).show();
+        } else {
+            requestPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+        }
+    }
+
+    private void setResult(String contents) {
+        Intent intent = new Intent(this, CreateMedicine.class);
+        intent.putExtra("medicine_key", contents);
+        Log.d("MedicineActivity", "setResult: contents: " + contents);
+        startActivity(intent);
     }
 }

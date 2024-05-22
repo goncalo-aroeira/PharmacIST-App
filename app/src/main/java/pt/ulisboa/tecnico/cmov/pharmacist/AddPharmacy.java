@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -32,6 +33,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -50,8 +52,7 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
     EditText etName, etAddress;
     ImageView ivLocation;
     FirebaseDBHandler firebaseDBHandler;
-    Uri imageUri;
-
+    Bitmap imageBitmap;
 
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ActivityResultLauncher<Intent> galleryLauncher;
@@ -93,9 +94,8 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
         cameraLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == Activity.RESULT_OK) {
-                Bitmap imageBitmap = (Bitmap) result.getData().getExtras().get("data");
+                imageBitmap = (Bitmap) result.getData().getExtras().get("data");
                 ivLocation.setImageBitmap(imageBitmap);
-                imageUri = saveImageToGallery(imageBitmap);
             }
         });
 
@@ -107,7 +107,7 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Change map location
+                // update map location
             }
 
             @Override
@@ -159,23 +159,14 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         }
 
 
-        firebaseDBHandler.uploadImageToStorage(imageUri, address, new FirebaseDBHandler.OnImageSavedListener() {
-            @Override
-            public void onImageSaved(String imageURL) {
-                Log.d(TAG, "onImageSaved: Image saved successfully : " + imageURL);
-            }
-
-
-            @Override
-            public void onFailure(Exception e) {
-                Toast toast = Toast.makeText(getApplicationContext(), "System failed to upload the image", Toast.LENGTH_SHORT);
-                toast.show();
-                e.printStackTrace();
-            }
-        });
-
-
         Pharmacy pharmacy = new Pharmacy(name, address);
+
+        String imageByte = utils.bitmapToByteArray(imageBitmap);
+        pharmacy.setImageBytes(imageByte);
+
+        // add an id to the pharmacy
+        pharmacy.generateId();
+
         firebaseDBHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnChangeListener() {
             @Override
             public void onSuccess() {
@@ -220,41 +211,6 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         } else {
             Toast.makeText(this, "No camera app available", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private Uri saveImageToGallery(Bitmap imageBitmap) {
-        // Get the content resolver
-        Log.d(TAG, "saveImageToGallery");
-        ContentResolver resolver = getContentResolver();
-
-        // Define the path and filename for the image
-        String imageName = "image_" + System.currentTimeMillis() + ".jpg";
-        Log.d(TAG, "saveImageToGallery: " + imageName);
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, imageName);
-        contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-
-        // Insert the image into the MediaStore
-        Uri imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-        Log.d(TAG, "saveImageToGallery: " + imageUri.toString());
-
-        try {
-            // Open an OutputStream to write the image data
-            if (imageUri != null) {
-                OutputStream outputStream = resolver.openOutputStream(imageUri);
-                if (outputStream != null) {
-                    // Compress and write the Bitmap to the OutputStream
-                    imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-                    // Close the OutputStream
-                    outputStream.close();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Log.d(TAG, "saveImageToGallery: Image saved to gallery successfully");
-        return imageUri;
     }
 
     private void getCurrentLocation() {

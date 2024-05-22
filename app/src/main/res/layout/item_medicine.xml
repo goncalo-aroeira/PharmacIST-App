@@ -7,30 +7,54 @@
 
     <TextView
         android:id="@+id/textViewMedicineName"
-        android:layout_width="0dp"
+        android:layout_width="254dp"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
+        android:text="Medicine Name Here"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewMedicineQuantity"
-        android:layout_width="0dp"
+        android:layout_width="315dp"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Quantity: Here"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textViewMedicineName"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/bell"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.52" />
+
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="7dp"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMedicineQuantity"
+        tools:layout_editor_absoluteX="0dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -42,9 +42,6 @@ public class CreateMedicine extends AppCompatActivity {
         btnSave = findViewById(R.id.btnCreateMedicine);
         btnCancel = findViewById(R.id.btnCancelMedicine);
 
-        // verify if medicine name already exists in database
-        //return error
-
         firebaseDBHandler = new FirebaseDBHandler();
 
         btnSave.setOnClickListener(v -> {
