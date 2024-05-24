@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="15dp"
+    android:padding="16dp"
+    android:layout_marginTop="80dp"
     tools:context=".Login">
 
 
@@ -13,7 +14,7 @@
         android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="300dp"
+        android:layout_marginTop="200dp"
         android:ems="10"
         android:hint="Email"
         android:inputType="textEmailAddress"

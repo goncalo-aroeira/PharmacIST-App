@@ -19,7 +19,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_alignParentTop="true"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@color/on_primary">
 
         <EditText
             android:id="@+id/edit_text_search"

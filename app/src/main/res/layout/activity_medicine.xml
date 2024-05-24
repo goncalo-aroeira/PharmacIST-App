@@ -5,16 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="15dp"
+    android:padding="16dp"
     tools:context=".MedicineActivity">
 
 
-    <EditText
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:inputType="text"
-        android:text="Medicine" />
+        android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
+        android:text="Medicine Menu" />
 
     <SearchView
         android:id="@+id/searchBarValue"

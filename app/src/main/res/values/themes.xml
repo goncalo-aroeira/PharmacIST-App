@@ -11,6 +11,12 @@
         <item name="colorOnSecondary">@color/on_secondary</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!--Add margin to accomodate status bar color-->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowContentTransitions">true</item>
+
         <item name="textAppearanceHeadline1">@style/TextAppearance.PharmacIST.Headline1</item>
         <item name="textAppearanceHeadline2">@style/TextAppearance.PharmacIST.Headline2</item>
         <item name="textAppearanceHeadline3">@style/TextAppearance.PharmacIST.Headline3</item>
