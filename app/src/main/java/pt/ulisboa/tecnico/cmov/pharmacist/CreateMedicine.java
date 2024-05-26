@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -14,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,7 +42,7 @@ public class CreateMedicine extends AppCompatActivity {
 
     private FirebaseDBHandler firebaseDBHandler;
 
-    private ActivityResultLauncher<Intent> cameraLauncher;
+    private ActivityResultLauncher<Intent> cameraLauncher, openGalleryLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +88,7 @@ public class CreateMedicine extends AppCompatActivity {
 
                         @Override
                         public void onGalleryButtonClick() {
-                            Toast.makeText(CreateMedicine.this, "Gallery", Toast.LENGTH_SHORT).show();
+                            openGallery();
                         }
                     });
             bottomSheetMenuFragment.show(getSupportFragmentManager(), "bottomSheetMenuFragment");
@@ -98,6 +101,16 @@ public class CreateMedicine extends AppCompatActivity {
                 boxPhoto.setImageBitmap(imageBitmap);
             }
         });
+
+        openGalleryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult o) {
+                        Uri imageUri = o.getData().getData();
+                        boxPhoto.setImageURI(imageUri);
+                    }
+                });
+
 
     }
 
@@ -152,4 +165,10 @@ public class CreateMedicine extends AppCompatActivity {
             Toast.makeText(this, "No camera app available", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        openGalleryLauncher.launch(intent);
+    }
+
 }

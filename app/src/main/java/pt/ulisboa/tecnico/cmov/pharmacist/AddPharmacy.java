@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
@@ -17,6 +18,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -54,10 +57,8 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
     FirebaseDBHandler firebaseDBHandler;
     Bitmap imageBitmap;
 
-    private ActivityResultLauncher<Intent> cameraLauncher;
-    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<Intent> cameraLauncher, galleryLauncher;
 
-    ActivityResultLauncher<Intent> takePictureResultLauncher;
     private ActivityResultLauncher<Intent> mapPickerLauncher;
 
 
@@ -103,6 +104,15 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
                 ivLocation.setImageBitmap(imageBitmap);
             }
         });
+
+        galleryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult o) {
+                        Uri imageUri = o.getData().getData();
+                        ivLocation.setImageURI(imageUri);
+                    }
+                });
 
         etAddress.addTextChangedListener(new TextWatcher() {
             @Override
@@ -201,7 +211,7 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
     @Override
     public void onGalleryButtonClick() {
-
+        openGallery();
     }
 
     @Override
@@ -216,6 +226,11 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         } else {
             Toast.makeText(this, "No camera app available", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        galleryLauncher.launch(intent);
     }
 
     private void getCurrentLocation() {
