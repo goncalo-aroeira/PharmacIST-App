@@ -1,10 +1,13 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -14,6 +17,8 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -24,6 +29,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.elements.BottomSheetMenuFragment;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
 public class CreateMedicine extends AppCompatActivity {
+    private static final String TAG = "CreateMedicine";
 
     private EditText medicineName, usage;
     private ImageView boxPhoto;
@@ -69,7 +75,12 @@ public class CreateMedicine extends AppCompatActivity {
                     new BottomSheetMenuFragment.OnButtonClickListener() {
                         @Override
                         public void onCameraButtonClick() {
-                            startCamera();
+                            Log.d(TAG, "onCameraButtonClick");
+                            if (ContextCompat.checkSelfPermission(CreateMedicine.this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(CreateMedicine.this, new String[]{Manifest.permission.CAMERA}, 100);
+                            } else {
+                                startCamera();
+                            }
                         }
 
                         @Override
