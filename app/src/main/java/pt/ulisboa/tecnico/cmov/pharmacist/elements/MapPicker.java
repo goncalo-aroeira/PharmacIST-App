@@ -4,8 +4,12 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,25 +25,60 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import pt.ulisboa.tecnico.cmov.pharmacist.R;
+import java.io.IOException;
+import java.util.List;
+
 
 public class MapPicker extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
+    private EditText searchAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_picker);
 
+        searchAddress = findViewById(R.id.search_address);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+
+        searchAddress.setOnEditorActionListener((v, actionId, event) -> {
+            String location = searchAddress.getText().toString();
+            searchLocation(location);
+            return true;
+        });
     }
+
+    private void searchLocation(String location) {
+        Geocoder geocoder = new Geocoder(MapPicker.this);
+        List<Address> addresses;
+
+        try {
+            addresses = geocoder.getFromLocationName(location, 1);
+            if (addresses.size() > 0) {
+                Address address = addresses.get(0);
+                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+                // Clear the map before adding new marker
+                mMap.clear();  // This removes all markers, overlays, and polylines from the map
+
+                // Set camera and add marker at the new location
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                mMap.addMarker(new MarkerOptions().position(latLng).title("Search Result"));
+            } else {
+                Toast.makeText(this, "Address not found", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error finding address: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
