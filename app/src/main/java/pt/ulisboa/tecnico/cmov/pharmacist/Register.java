@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,10 +46,12 @@ public class Register extends AppCompatActivity {
 
         btnRegister.setOnClickListener(view -> {
             User newUser = new User(etUsername.getText().toString(), etEmail.getText().toString(), etPassword.getText().toString());
-
+            newUser.generateId();
             firebaseDBHandler.registerUser(newUser, new FirebaseDBHandler.OnRegistrationListener() {
+
                 @Override
                 public void onRegistrationSuccess() {
+
                     Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(Register.this, MainMenu.class));
                 }

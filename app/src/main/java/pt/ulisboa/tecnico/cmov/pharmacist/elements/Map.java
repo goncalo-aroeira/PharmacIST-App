@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.PharmacyInformationPannel;
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
@@ -64,13 +66,15 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
             return insets;
         });
 
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        String userID = userLocalStore.getLoggedInId();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
 
         FirebaseDBHandler dbHandler = new FirebaseDBHandler();
 
-        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+        dbHandler.loadPharmacies(userID, new FirebaseDBHandler.OnPharmaciesLoadedListener() {
             @Override
             public void onFailure(Exception e) {
                 Log.e("Map", "Failed to load pharmacies", e);
@@ -106,22 +110,7 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
                 Toast.makeText(Map.this, "Please enter an address", Toast.LENGTH_SHORT).show();
             }
         });
-        UserLocalStore userLocalStore = new UserLocalStore(this);
 
-        String email = userLocalStore.getLoggedInEmail();
-
-        dbHandler.getFavoritesPharmacies(email, new FirebaseDBHandler.OnGetFavoritesPharmacies() {
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("Map", "Failed to load favorite pharmacies", e);
-            }
-
-            @Override
-            public void OnPharmaciesLoadedSuccessfully(ArrayList<String> favoritePharmacies) {
-                Log.d("Map", "Favorite pharmacies loaded: " + favoritePharmacies.size());
-                Map.this.favoritePharmacies = favoritePharmacies;
-            }
-        });
 
     }
 
@@ -139,13 +128,12 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
             LatLng location = geocodeAddress(pharmacy.getAddress());
 
             if (location != null) {
-                boolean isFavorite = favoritePharmacies != null && favoritePharmacies.contains(pharmacy.getAddress());
 
                 MarkerOptions markerOptions = new MarkerOptions()
                         .position(location)
                         .title(pharmacy.getName())
                         .icon(BitmapDescriptorFactory.defaultMarker(
-                                isFavorite ? BitmapDescriptorFactory.HUE_AZURE : BitmapDescriptorFactory.HUE_RED));
+                                pharmacy.isFavorite() ? BitmapDescriptorFactory.HUE_AZURE : BitmapDescriptorFactory.HUE_RED));
 
                 Marker marker = googleMap.addMarker(markerOptions);
                 pharmacyMarkers.add(marker);
@@ -173,11 +161,9 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
                     // Add more data as needed
                     startActivity(intent);
 
-                    // Return true to indicate that the click event is handled
                     return true;
                 }
 
-                // Return false to indicate that the click event is not handled
                 return false;
             }
         });
@@ -272,10 +258,5 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
             }
         }
     }
-
-
-// Call getCurrentLocation() when you want to center the map on the current location
-
-// Call searchAddress(address) when you want to center the map on a specific address
 
 }

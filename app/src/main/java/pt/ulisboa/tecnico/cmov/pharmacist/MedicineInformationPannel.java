@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import static androidx.core.location.LocationManagerCompat.getCurrentLocation;
+
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -34,6 +36,7 @@ import java.util.List;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 
 public class MedicineInformationPannel extends AppCompatActivity {
 
@@ -47,13 +50,12 @@ public class MedicineInformationPannel extends AppCompatActivity {
     private static final int LOCATION_REQUEST_CODE = 101;
     private HashMap<String, LatLng> addressCache = new HashMap<>();
 
-
+    private FirebaseDBHandler dbHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_medicine_information_pannel);
-
         EdgeToEdge.enable(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -62,20 +64,18 @@ public class MedicineInformationPannel extends AppCompatActivity {
         });
 
         // Initialize views
-        medicineNameTextView = findViewById(R.id.medicineNameTextView);
-        //medicineImageView = findViewById(R.id.medicineImageView);
+        dbHandler = new FirebaseDBHandler();
+        medicineNameTextView = findViewById(R.id.textView_medicine_name);
+
 
         // Retrieve and display medicine data
         Medicine medicine = (Medicine) getIntent().getSerializableExtra("medicine");
         if (medicine != null) {
             medicineNameTextView.setText(medicine.getName());
-
-            // If you are using an image loader library like Glide or Picasso, load the image
-            // Example with Picasso:
-            // Picasso.get().load(medicine.getImageUrl()).into(medicineImageView);
         }
 
-        pharmaciesListView = findViewById(R.id.pharmaciesListView);
+
+        pharmaciesListView = findViewById(R.id.recyclerViewPharmacies);
 
         medicine = (Medicine) getIntent().getSerializableExtra("medicine");
 
@@ -101,33 +101,33 @@ public class MedicineInformationPannel extends AppCompatActivity {
     }
 
     private void fetchAllPharmacies(Medicine medicine) {
-        FirebaseDBHandler dbHandler = new FirebaseDBHandler();
-        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
-            @Override
-            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
-                allPharmacies = pharmacies;
+        allPharmacies = dbHandler.getPharmacies();
+        filterPharmaciesWithMedicine(medicine);
+        calculateDistancesAndUpdateList();
+    }
 
-                filterPharmaciesWithMedicine(medicine);
-                calculateDistancesAndUpdateList();
+    private void filterPharmaciesWithMedicine(Medicine medicine) {
+        if (allPharmacies == null) {
+            Log.e("MedicineInformationPannel", "Pharmacies data is not available.");
+            return;
+        }
+        ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
+        dbHandler.getInventoryForMedicine(medicine.getId(), new FirebaseDBHandler.OnGetInventory() {
+            @Override
+            public void onInventoryLoaded(HashMap<String, Integer> inventory) {
+                for (Pharmacy pharmacy : allPharmacies) {
+                    if (inventory.containsKey(pharmacy.getId())) {
+                        filteredPharmacies.add(pharmacy);
+                    }
+                }
+                updatePharmacyList(filteredPharmacies);
             }
 
             @Override
             public void onFailure(Exception e) {
-                Log.e("Error", "Failed to load pharmacies", e);
-            }
+
+            };
         });
-    }
-
-    private void filterPharmaciesWithMedicine(Medicine medicine) {
-        ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
-
-        for (Pharmacy pharmacy : allPharmacies) {
-            if (pharmacy.getInventory().get(medicine) != null && pharmacy.getInventory().containsKey(medicine) && pharmacy.getInventory().get(medicine) > 0) {
-                //print added pharmacies
-                filteredPharmacies.add(pharmacy);
-            }
-        }
-        updatePharmacyList(filteredPharmacies);
     }
 
     private void updatePharmacyList(ArrayList<Pharmacy> pharmacies) {

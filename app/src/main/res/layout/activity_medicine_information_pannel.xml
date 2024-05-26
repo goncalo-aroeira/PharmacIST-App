@@ -3,47 +3,77 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
+    android:layout_marginTop="60dp"
     tools:context=".MedicineInformationPannel">
 
-    <!-- Medicine Name TextView -->
     <TextView
-        android:id="@+id/medicineNameTextView"
-        android:layout_width="0dp"
+        android:id="@+id/textView_medicine_name"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textSize="24sp"
-        android:textStyle="bold"
         android:gravity="center"
-        android:text="Medicine Name"
-        app:layout_constraintTop_toTopOf="parent"
+        android:text="Medicine Name Here"
+        android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Medicine ImageView
     <ImageView
-        android:id="@+id/medicineImageView"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="8dp"
-        android:scaleType="centerCrop"
-        android:src="@mipmap/ic_launcher"
-    app:layout_constraintTop_toBottomOf="@+id/medicinePurposeTextView"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent" /> -->
+        android:id="@+id/ivMedicinePhoto"
+        android:layout_width="176dp"
+        android:layout_height="146dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_medicine_name"
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
-    <!-- RecyclerView for Pharmacies -->
-    <ListView
-        android:id="@+id/pharmaciesListView"
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/materialDivider3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/medicineNameTextView"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/ivMedicinePhoto" />
 
+    <TextView
+        android:id="@+id/textView_medicine_usage"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="68dp"
+        android:text="Medicine Usage Information"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@+id/ivMedicinePhoto"
+        app:layout_constraintTop_toBottomOf="@+id/textView_medicine_name" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPharmacies"
+        android:layout_width="346dp"
+        android:layout_height="496dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivMedicinePhoto"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/textView_pharmacies_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Available at:"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewPharmacies"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/materialDivider3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

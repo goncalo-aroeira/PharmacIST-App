@@ -7,17 +7,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
+
 public class Pharmacy implements Serializable {
 
     private String id, name, address, imageBytes;
+    Boolean isFavorite, isFlagged;
     double distance;
-    private HashMap<Medicine, Integer> inventory = new HashMap<Medicine, Integer>();
 
     public Pharmacy(String name, String address) {
         this.id= null;
         this.name = name;
         this.address = address;
         this.imageBytes = null;
+        this.isFavorite = false;
+        this.isFlagged = false;
     }
 
     public Pharmacy(String name, String address, String imageBytes) {
@@ -25,6 +29,8 @@ public class Pharmacy implements Serializable {
         this.name = name;
         this.address = address;
         this.imageBytes = imageBytes;
+        this.isFavorite = false;
+        this.isFlagged = false;
     }
 
     public Pharmacy(String id, String name, String address, String imageBytes) {
@@ -32,10 +38,12 @@ public class Pharmacy implements Serializable {
         this.name = name;
         this.address = address;
         this.imageBytes = imageBytes;
+        this.isFavorite = false;
+        this.isFlagged = false;
     }
 
     public void generateId() {
-        this.id = java.util.UUID.randomUUID().toString();
+        this.id = utils.generateRandomId(5);
     }
 
     public String getId() {
@@ -70,35 +78,20 @@ public class Pharmacy implements Serializable {
         return distance;
     }
 
-    public void addMedicine(Medicine medicine, Integer quantity) {
-        inventory.put(medicine, quantity);
+    public void setFavorite(Boolean favorite) {
+        isFavorite = favorite;
     }
 
-    public void increaseMedicineQuantity(Medicine medicine, Integer addValue) {
-        if (addValue > 0) {
-            Integer amount = inventory.get(medicine);
-            inventory.put(medicine, amount + addValue);
-        }
+    public Boolean isFavorite() {
+        return isFavorite;
     }
 
-    public HashMap<Medicine, Integer> getInventory() {
-        return this.inventory;
+    public void setFlagged(Boolean flagged) {
+        isFlagged = flagged;
     }
 
-    public Integer getMedicineAmount(Medicine medicine) {
-        return inventory.get(medicine);
+    public Boolean isFlagged() {
+        return isFlagged;
     }
 
-    public void decreaseMedicineQuantity(Medicine medicine, Integer removeValue) {
-        Integer amount = inventory.get(medicine);
-        if (Objects.equals(amount, removeValue)) {
-            removeMedicine(medicine);
-        } else if (amount < removeValue) {
-            inventory.put(medicine, amount - removeValue);
-        }
-    }
-
-    public void removeMedicine(Medicine medicine) {
-        inventory.remove(medicine);
-    }
 }

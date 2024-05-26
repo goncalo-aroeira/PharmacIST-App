@@ -1,37 +1,38 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.SearchView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.material.button.MaterialButton;
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 
 public class PharmaciesMenu extends AppCompatActivity {
 
@@ -47,6 +48,12 @@ public class PharmaciesMenu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_pharmacies_menu);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         initializeViewsAndFirebase();
     }
 
@@ -58,7 +65,15 @@ public class PharmaciesMenu extends AppCompatActivity {
 
 
     private void loadPharmacies() {
-        dbHandler.getAllPharmacies(new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+
+        UserLocalStore user = new UserLocalStore(this);
+        if (user.getLoggedInName().equals("Guest")) {
+            btnAddPharmacy.setEnabled(false);
+        }
+
+        String userId = user.getLoggedInId();
+
+        dbHandler.loadPharmacies(userId, new FirebaseDBHandler.OnPharmaciesLoadedListener() {
             @Override
             public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
                 Log.d("PharmaciesMenu", "Pharmacies loaded: " + pharmacies.size());
@@ -123,6 +138,9 @@ public class PharmaciesMenu extends AppCompatActivity {
             }
         }
 
+        Collections.sort(filteredPharmacies, Comparator.comparingDouble(Pharmacy::getDistance)
+        );
+
         PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, filteredPharmacies);
         lvPharmacies.setAdapter(pharmacyAdapter);
     }
@@ -142,6 +160,5 @@ public class PharmaciesMenu extends AppCompatActivity {
         }
         return null;
     }
-
 
 }

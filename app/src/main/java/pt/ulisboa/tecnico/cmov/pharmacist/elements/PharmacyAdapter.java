@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 
 public class PharmacyAdapter extends ArrayAdapter<Pharmacy> {

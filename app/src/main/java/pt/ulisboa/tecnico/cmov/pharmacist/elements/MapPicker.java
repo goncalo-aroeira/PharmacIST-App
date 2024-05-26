@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.Manifest;
 import android.app.Activity;
@@ -20,6 +20,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 
 public class MapPicker extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;

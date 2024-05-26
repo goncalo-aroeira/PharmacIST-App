@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,7 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Objects;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 
 public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.MedicineViewHolder> {
@@ -53,5 +55,14 @@ public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapte
             super(itemView);
             textViewMedicineName = itemView.findViewById(R.id.textViewMedicineName);
         }
+    }
+
+    public Medicine getMedicinesById(String id) {
+        for (Medicine medicine : medicines) {
+            if (Objects.equals(medicine.getId(), id)) {
+                return medicine;
+            }
+        }
+        return null;
     }
 }

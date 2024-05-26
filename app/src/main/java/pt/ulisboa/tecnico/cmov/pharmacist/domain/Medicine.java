@@ -6,11 +6,13 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
+
 public class Medicine implements Serializable {
 
     String id;
     String name;
-    Byte[] imageBytes;
+    String imageBytes;
     String usage;
 
     public Medicine(String name) {
@@ -27,15 +29,23 @@ public class Medicine implements Serializable {
         this.usage = usage;
     }
 
+    public Medicine(String id, String name, String usage) {
+        this.id = id;
+        this.name = name;
+        this.imageBytes = null;
+        this.usage = usage;
+    }
+
+
     public String getName() {
         return name;
     }
 
-    public Byte[] getImageBytes() {
+    public String getImageBytes() {
         return imageBytes;
     }
 
-    public void setImageBytes(Byte[] imageBytes) {
+    public void setImageBytes(String imageBytes) {
         this.imageBytes = imageBytes;
     }
 
@@ -54,7 +64,7 @@ public class Medicine implements Serializable {
     }
 
     public void generateId() {
-        this.id = UUID.randomUUID().toString();
+        this.id = utils.generateRandomId(10);
     }
 
     public String getId() {

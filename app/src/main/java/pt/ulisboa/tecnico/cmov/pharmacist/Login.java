@@ -36,8 +36,14 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         initializeViewsAndFirebase();
+
     }
 
     private void initializeViewsAndFirebase() {
@@ -67,13 +73,14 @@ public class Login extends AppCompatActivity {
 
     private void onLoginAsGuestClick(View view) {
 
+        Log.d("LOGIN", "onLoginAsGuestClick: Guest");
+
         String name = "Guest";
         String email = UUID.randomUUID().toString() + "@guest.com";
         String password = name + "_pwd";
 
 
         User guest = new User(name, email, password);
-
         guest.generateId();
 
         firebaseDBHandler.registerUser(guest, new FirebaseDBHandler.OnRegistrationListener() {

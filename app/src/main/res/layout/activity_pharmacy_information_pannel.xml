@@ -5,18 +5,18 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="60dp"
     android:padding="16dp"
+
     tools:context=".PharmacyInformationPannel">
 
     <ImageView
         android:id="@+id/ivPhoto"
-        android:layout_width="154dp"
-        android:layout_height="110dp"
-        android:layout_marginTop="44dp"
-        android:layout_marginEnd="15dp"
-        app:layout_constraintEnd_toStartOf="@+id/textView_pharmacy_address"
+        android:layout_width="176dp"
+        android:layout_height="146dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <TextView
@@ -27,72 +27,70 @@
         android:text="Pharmacy Name Here"
         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView_pharmacy_address"
-        android:layout_width="0dp"
+        android:layout_width="160dp"
         android:layout_height="43dp"
-        android:layout_marginTop="37dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="68dp"
         android:text="Pharmacy Address Here, 1234-123, LISBON"
         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@+id/ivPhoto"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/ivPhoto"
-        app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name" />
+        app:layout_constraintBottom_toTopOf="@+id/map"
+        app:layout_constraintStart_toEndOf="@+id/ivPhoto" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMedicines"
-        android:layout_width="385dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_width="353dp"
+        android:layout_height="162dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView6" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button_add_medicine"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="40dp"
+        android:layout_marginStart="130dp"
         android:text="Add Medicine Stock"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map" />
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
+        app:layout_constraintStart_toEndOf="@+id/textView6" />
+
 
     <com.google.android.material.divider.MaterialDivider
         android:id="@+id/materialDivider3"
         android:layout_width="404dp"
         android:layout_height="0dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_navigate_to_pharmacy" />
+        android:layout_marginBottom="64dp"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.52"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/textView6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginBottom="14dp"
         android:text="Stock"
         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/materialDivider3" />
-
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button_navigate_to_pharmacy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:text="Navigate there"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.962"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/map" />
 
     <fragment
@@ -100,39 +98,21 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="380dp"
         android:layout_height="223dp"
-        android:layout_marginBottom="300dp"
-        app:layout_constraintBottom_toTopOf="@+id/button_add_medicine"
+        android:layout_marginTop="56dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.566"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton_favorite"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toBottomOf="@+id/ivPhoto" />
 
     <ImageButton
         android:id="@+id/imageButton_favorite_outline"
-        android:layout_width="24dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="82dp"
-        android:layout_marginBottom="62dp"
+        android:layout_width="60dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="32dp"
         android:src="@drawable/ic_favorite_outline"
-        app:layout_constraintBottom_toTopOf="@+id/map"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.51"
-        android:visibility="invisible"/>
+        app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name" />
 
-
-    <ImageButton
-        android:id="@+id/imageButton_favorite_full"
-        android:layout_width="24dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="82dp"
-        android:layout_marginBottom="62dp"
-        android:src="@drawable/ic_favorite_outline"
-        app:layout_constraintBottom_toTopOf="@+id/map"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.51"
-        android:visibility="invisible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

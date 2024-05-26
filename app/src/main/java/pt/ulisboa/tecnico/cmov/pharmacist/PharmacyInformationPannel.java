@@ -1,9 +1,12 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -13,8 +16,8 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -25,6 +28,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,14 +37,39 @@ import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.MedicineAdapter;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
 
-    private ActivityResultLauncher<Intent> addMedicineLauncher;
     private FirebaseDBHandler dbHandler;
+
+    private Pharmacy pharmacy;
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeScannerLauncher =
+            registerForActivityResult(new ScanContract(), result -> {
+                if (result.getContents() == null) {
+                    Toast.makeText(this, "No barcode scanned", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d("AddMedicine", "qrCodeScannerLauncher: barcode result" + result.getContents());
+                    Toast.makeText(this, "Scanned barcode: " + result.getContents(), Toast.LENGTH_SHORT).show();
+                    setResult(result.getContents());
+                }
+            });
+
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    scanBarcode();
+                } else {
+                    Toast.makeText(this, "Permission denied to access camera", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,20 +82,11 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             return insets;
         });
 
-        // Initialize the launcher for AddMedicine activity result
-        addMedicineLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        handleAddMedicineResult(result.getData());
-                    }
-                });
-
         Intent intent = getIntent();
         if (intent != null) {
             dbHandler = new FirebaseDBHandler();
 
-            Pharmacy pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");
+            pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");
             LatLng pharmacyLocation = intent.getParcelableExtra("pharmacy_location");
 
             if (pharmacy == null || pharmacyLocation == null) {
@@ -77,7 +98,7 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             populateDetailView(pharmacy);
             setupMap(pharmacyLocation, pharmacy.getName());
             setupButtons(pharmacy, pharmacyLocation);
-            setupRecyclerView(pharmacy.getInventory());
+            setupRecyclerView();
         }
     }
 
@@ -124,7 +145,7 @@ public class PharmacyInformationPannel extends AppCompatActivity {
     }
 
     private void setupAddToFavoritesButton(Pharmacy pharmacy) {
-        ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite);
+        ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_outline);
         addToFavoritesButton.setOnClickListener(view -> {
             UserLocalStore userLocalStore = new UserLocalStore(this);
             String userEmail = userLocalStore.getLoggedInEmail();
@@ -150,26 +171,43 @@ public class PharmacyInformationPannel extends AppCompatActivity {
     private void setupAddMedicineButton(Pharmacy pharmacy) {
         Button addMedicineButton = findViewById(R.id.button_add_medicine);
         addMedicineButton.setOnClickListener(view -> {
-            // Launch activity to capture medicine details
-            Intent addMedicineIntent = new Intent(PharmacyInformationPannel.this, AddMedicine.class);
-            addMedicineIntent.putExtra("pharmacy", pharmacy);
-            addMedicineLauncher.launch(addMedicineIntent);
+            // start scan to add medicine
+            checkPermissionAndShowActivity(this);
         });
+
     }
 
-    private void handleAddMedicineResult(Intent data) {
-        Medicine newMedicine = data.getParcelableExtra("new_medicine");
-        // Update your app's data structure and notify the RecyclerView adapter
-        // Add newMedicine to your list of medicines
-        // Notify RecyclerView adapter to update UI
-    }
+    private void setupRecyclerView() {
+        dbHandler.getInventoryForPharmacy(pharmacy.getId(), new FirebaseDBHandler.OnGetInventory() {
+            @Override
+            public void onInventoryLoaded(HashMap<String, Integer> inventory) {
+                RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
+                recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(PharmacyInformationPannel.this));
+                List<String> medicines_id = new ArrayList<>(inventory.keySet());
+                List<Medicine> medicines = new ArrayList<>();
+                for (String id : medicines_id) {
+                    dbHandler.getMedicineById(id, new FirebaseDBHandler.OnMedicineLoadedListener() {
+                        @Override
+                        public void onMedicineLoaded(Medicine medicine) {
+                            medicines.add(medicine);
+                        }
 
-    private void setupRecyclerView(HashMap<Medicine, Integer> pharmacyInventory) {
-        RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
-        recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(this));
-        List<Medicine> medicines = new ArrayList<>(pharmacyInventory.keySet());
-        MedicineAdapter adapter = new MedicineAdapter(this, medicines, pharmacyInventory);
-        recyclerViewMedicines.setAdapter(adapter);
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.e("PharmacyInformationPannel", "Failed to load medicine", e);
+                        }
+                    });
+                }
+                MedicineAdapter adapter = new MedicineAdapter(PharmacyInformationPannel.this, medicines, inventory);
+                recyclerViewMedicines.setAdapter(adapter);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("PharmacyInformationPannel", "Failed to load pharmacy inventory", e);
+            }
+        });
+
     }
 
     private void navigateToPharmacy(LatLng location) {
@@ -183,4 +221,37 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             startActivity(mapIntent);
         }
     }
+
+    private void scanBarcode() {
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan a barcode");
+        options.setCameraId(0);
+        options.setBeepEnabled(true);
+        options.setBarcodeImageEnabled(true);
+        options.setOrientationLocked(true);
+
+        qrCodeScannerLauncher.launch(options);
+    }
+
+    private void setResult(String contents) {
+        if (contents != null) {
+            Intent intent = new Intent(this, AddMedicine.class);
+            intent.putExtra("medicine_key", contents);
+            intent.putExtra("pharmacy_name", pharmacy.getName());
+            Log.d("MedicineActivity", "medicine_key: " + contents);
+            Log.d("MedicineActivity", "pharmacy_name: " + pharmacy.getName());
+            startActivity(intent);
+        }
+    }
+
+    private void checkPermissionAndShowActivity(Context context) {
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            scanBarcode();
+        } else if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)) {
+            Toast.makeText(context, "Camera permission is needed to scan barcode", Toast.LENGTH_SHORT).show();
+        } else {
+            requestPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+        }
+    }
+
 }

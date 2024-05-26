@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cmov.pharmacist;
+package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 
 public class BottomSheetMenuFragment extends BottomSheetDialogFragment {
 
