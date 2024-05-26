@@ -37,9 +37,9 @@ import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
-import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
 public class PharmacyInformationPannel extends AppCompatActivity {
@@ -239,7 +239,7 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             intent.putExtra("medicine_key", contents);
             intent.putExtra("pharmacy_name", pharmacy.getName());
             Log.d("MedicineActivity", "medicine_key: " + contents);
-            Log.d("MedicineActivity", "pharmacy_name: " + pharmacy.getName());
+            Log.d("MedicineActivity", "pharmacy_id: " + pharmacy.getId());
             startActivity(intent);
         }
     }
