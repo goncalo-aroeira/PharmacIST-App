@@ -2,8 +2,6 @@ package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -44,6 +42,8 @@ public class Register extends AppCompatActivity {
         etPassword = findViewById(R.id.etPasswordRegister);
         btnRegister = findViewById(R.id.btnRegister);
 
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+
         btnRegister.setOnClickListener(view -> {
             User newUser = new User(etUsername.getText().toString(), etEmail.getText().toString(), etPassword.getText().toString());
             newUser.generateId();
@@ -53,6 +53,7 @@ public class Register extends AppCompatActivity {
                 public void onRegistrationSuccess() {
 
                     Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                    userLocalStore.saveLoginDetails(newUser.getId(), newUser.getName(), newUser.getEmail(), newUser.getPassword());
                     startActivity(new Intent(Register.this, MainMenu.class));
                 }
 
