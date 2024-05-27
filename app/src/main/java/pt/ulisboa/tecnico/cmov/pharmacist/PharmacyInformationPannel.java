@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -118,7 +119,16 @@ public class PharmacyInformationPannel extends AppCompatActivity {
         // Assuming there's an ImageView to set the bitmap
         ImageView pharmacyImageView = findViewById(R.id.ivPhoto);
         pharmacyImageView.setImageBitmap(imageBitmap);
+
+        /*if (pharmacy.isFavorite()) {
+            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_full);
+            addToFavoritesButton.setVisibility(View.VISIBLE);
+        } else {
+            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_outline);
+            addToFavoritesButton.setVisibility(View.VISIBLE);
+        }*/
     }
+
 
     private void setupMap(LatLng pharmacyLocation, String pharmacyName) {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -145,19 +155,29 @@ public class PharmacyInformationPannel extends AppCompatActivity {
     }
 
     private void setupAddToFavoritesButton(Pharmacy pharmacy) {
-        ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_outline);
+        ImageButton addToFavoritesButton;
+        addToFavoritesButton = findViewById(R.id.imageButton_favorite);
+        if (pharmacy.isFavorite()) {
+                addToFavoritesButton.setImageResource(R.drawable.ic_favorite_full);
+
+        } else {
+                addToFavoritesButton.setImageResource(R.drawable.ic_favorite_outline);
+        }
         addToFavoritesButton.setOnClickListener(view -> {
+            Log.d("PharmacyInformationPannel", "Add to favorites button clicked");
             UserLocalStore userLocalStore = new UserLocalStore(this);
-            String userEmail = userLocalStore.getLoggedInEmail();
-            dbHandler.toggleFavoriteStatus(userEmail, pharmacy.getAddress(), new FirebaseDBHandler.OnFavoriteToggleListener() {
+            String userId = userLocalStore.getLoggedInId();
+            dbHandler.toggleFavoriteStatus(userId, pharmacy.getAddress(), new FirebaseDBHandler.OnFavoriteToggleListener() {
                 @Override
                 public void onAddedToFavorite() {
                     Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
+                    addToFavoritesButton.setImageResource(R.drawable.ic_favorite_full);
                 }
 
                 @Override
                 public void onRemovedFromFavorite() {
                     Toast.makeText(PharmacyInformationPannel.this, "Pharmacy removed from favorites", Toast.LENGTH_SHORT).show();
+                    addToFavoritesButton.setImageResource(R.drawable.ic_favorite_outline);
                 }
 
                 @Override

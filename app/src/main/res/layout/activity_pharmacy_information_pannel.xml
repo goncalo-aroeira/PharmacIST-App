@@ -105,12 +105,11 @@
         app:layout_constraintTop_toBottomOf="@+id/ivPhoto" />
 
     <ImageButton
-        android:id="@+id/imageButton_favorite_outline"
+        android:id="@+id/imageButton_favorite"
         android:layout_width="60dp"
         android:layout_height="48dp"
         android:layout_marginTop="32dp"
         android:src="@drawable/ic_favorite_outline"
-        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name" />
 

@@ -4,8 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,8 +11,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -119,13 +115,15 @@ public class FirebaseDBHandler {
                 .addOnFailureListener(listener::onFailure);
     };
 
-    public void loadPharmacies(String userId, OnPharmaciesLoadedListener listener) {
 
+    public void loadPharmacies(String userId, OnPharmaciesLoadedListener listener) {
         DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
         DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
 
         ArrayList<String> favoritePharmacies = new ArrayList<>();
         ArrayList<String> flaggedPharmacies = new ArrayList<>();
+
+        Log.d("loadPharmacies", "Loading user data for user ID: " + userId);
 
         userRef.get().addOnCompleteListener(userTask -> {
             if (userTask.isSuccessful()) {
@@ -134,16 +132,24 @@ public class FirebaseDBHandler {
                 if (userSnapshot.hasChild("favorite_pharmacies")) {
                     for (DataSnapshot favoriteSnapshot : userSnapshot.child("favorite_pharmacies").getChildren()) {
                         favoritePharmacies.add(favoriteSnapshot.getKey());
+                        Log.d("loadPharmacies", "Loaded favorite pharmacy ID: " + favoriteSnapshot.getKey());
                     }
+                } else {
+                    Log.d("loadPharmacies", "No favorite pharmacies found");
                 }
 
                 if (userSnapshot.hasChild("flagged_pharmacies")) {
                     for (DataSnapshot flaggedSnapshot : userSnapshot.child("flagged_pharmacies").getChildren()) {
                         flaggedPharmacies.add(flaggedSnapshot.getKey());
+                        Log.d("loadPharmacies", "Loaded flagged pharmacy ID: " + flaggedSnapshot.getKey());
                     }
+                } else {
+                    Log.d("loadPharmacies", "No flagged pharmacies found");
                 }
+
                 pharmaciesRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        ArrayList<Pharmacy> allPharmacies = new ArrayList<>();
                         for (DataSnapshot snapshot : task.getResult().getChildren()) {
                             Pharmacy newPharmacy = new Pharmacy(
                                     snapshot.child("id").getValue(String.class),
@@ -153,26 +159,32 @@ public class FirebaseDBHandler {
                             );
                             if (favoritePharmacies.contains(newPharmacy.getId())) {
                                 newPharmacy.setFavorite(true);
+                                Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is set as favorite.");
                             }
 
                             if (flaggedPharmacies.contains(newPharmacy.getId())) {
                                 newPharmacy.setFlagged(true);
+                                Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is flagged and hidden.");
                             }
 
                             allPharmacies.add(newPharmacy);
                         }
 
+                        Log.d("loadPharmacies", "Pharmacies loaded successfully. Count: " + allPharmacies.size());
                         listener.onPharmaciesLoaded(allPharmacies);
 
                     } else {
+                        Log.e("loadPharmacies", "Error loading pharmacies", task.getException());
                         listener.onFailure(Objects.requireNonNull(task.getException()));
                     }
                 });
             } else {
+                Log.e("loadPharmacies", "Error loading user data", userTask.getException());
                 listener.onFailure(Objects.requireNonNull(userTask.getException()));
             }
         });
     }
+
 
     public ArrayList<Pharmacy> getPharmacies() {
         return allPharmacies;
@@ -188,32 +200,57 @@ public class FirebaseDBHandler {
     }
 
 
+
     public void toggleFavoriteStatus(String userId, String pharmacyAddress, OnFavoriteToggleListener listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
         Query query = usersRef.orderByKey().equalTo(userId);
 
+        Log.d("toggleFavoriteStatus", "Toggling favorite status for user: " + userId + ", pharmacy: " + pharmacyAddress);
+
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()) {
+                    Log.w("toggleFavoriteStatus", "User not found in database.");
+                    return; // Exit if the user doesn't exist
+                }
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     if (userSnapshot.child(FAVORITES_NODE).hasChild(pharmacyAddress)) {
+                        Log.d("toggleFavoriteStatus", "Removing pharmacy from favorites.");
                         userSnapshot.child(FAVORITES_NODE).child(pharmacyAddress).getRef().removeValue()
-                                .addOnCompleteListener(task -> listener.onRemovedFromFavorite());
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.d("toggleFavoriteStatus", "Pharmacy removed from favorites successfully.");
+                                        listener.onRemovedFromFavorite();
+                                    } else {
+                                        Log.e("toggleFavoriteStatus", "Failed to remove pharmacy from favorites.", task.getException());
+                                        listener.onFailure(task.getException());
+                                    }
+                                });
                     } else {
-                        userSnapshot.child(FAVORITES_NODE).child(pharmacyAddress).getRef().setValue(pharmacyAddress)
-                                .addOnCompleteListener(task -> listener.onAddedToFavorite());
+                        Log.d("toggleFavoriteStatus", "Adding pharmacy to favorites.");
+                        userSnapshot.child(FAVORITES_NODE).child(pharmacyAddress).getRef().setValue(true)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.d("toggleFavoriteStatus", "Pharmacy added to favorites successfully.");
+                                        listener.onAddedToFavorite();
+                                    } else {
+                                        Log.e("toggleFavoriteStatus", "Failed to add pharmacy to favorites.", task.getException());
+                                        listener.onFailure(task.getException());
+                                    }
+                                });
                     }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("toggleFavoriteStatus", "Database access cancelled.", databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
-
-
     }
+
 
 
     /* =============================================================================================

@@ -82,6 +82,8 @@ public class Login extends AppCompatActivity {
 
         User guest = new User(name, email, password);
         guest.generateId();
+        userLocalStore.saveLoginDetails(guest.getId(), guest.getName(), guest.getEmail(), guest.getPassword());
+
 
         firebaseDBHandler.registerUser(guest, new FirebaseDBHandler.OnRegistrationListener() {
             @Override
