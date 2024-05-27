@@ -1,8 +1,11 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +35,7 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
@@ -78,6 +82,7 @@ public class MedicineActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadLocale();
         setContentView(R.layout.activity_medicine);
         EdgeToEdge.enable(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -190,6 +195,7 @@ public class MedicineActivity extends AppCompatActivity {
     private void showMenu(View v) {
         PopupMenu popup = new PopupMenu(getApplicationContext(), v);
         popup.getMenuInflater().inflate(R.menu.menu_popup, popup.getMenu());
+        loadLocale();
 
         MenuItem scanItem = popup.getMenu().findItem(R.id.item_scan).setVisible(true);
         MenuItem addItem = popup.getMenu().findItem(R.id.item_add).setVisible(true);
@@ -248,5 +254,22 @@ public class MedicineActivity extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void setLocale(String language) {
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+        Configuration configuration = new Configuration();
+        configuration.locale = locale;
+        getBaseContext().getResources().updateConfiguration(configuration, getBaseContext().getResources().getDisplayMetrics());
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", language);
+        editor.apply();
+    }
+
+    public void loadLocale(){
+        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        setLocale(language);
     }
 }

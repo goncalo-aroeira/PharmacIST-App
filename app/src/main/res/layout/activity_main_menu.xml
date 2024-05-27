@@ -17,6 +17,7 @@
         style="@style/Widget.MaterialComponents.MaterialDivider"
         android:layout_width="393dp"
         android:layout_height="155dp"
+        android:layout_marginTop="56dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -51,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="28dp"
-        android:text="Logout"
+        android:text="@string/logout"
         app:layout_constraintBottom_toTopOf="@+id/btnUpgradeAccount"
         app:layout_constraintEnd_toEndOf="@+id/materialDivider"
         app:layout_constraintTop_toTopOf="@+id/materialDivider" />
@@ -62,7 +63,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="28dp"
         android:layout_marginBottom="16dp"
-        android:text="Upgrade"
+        android:text="@string/upgrade"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/materialDivider"
         app:layout_constraintEnd_toEndOf="@+id/materialDivider" />
@@ -74,7 +75,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:layout_marginTop="28dp"
-        android:text="Welcome"
+        android:text="@string/welcome"
         app:layout_constraintEnd_toEndOf="@+id/materialDivider"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/imageView"
@@ -86,7 +87,7 @@
         android:layout_width="347dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
-        android:text="Medicine Menu"
+        android:text="@string/medicine_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.562"
         app:layout_constraintStart_toStartOf="parent"
@@ -97,7 +98,7 @@
         android:layout_width="347dp"
         android:layout_height="48dp"
         android:layout_marginTop="25dp"
-        android:text="Pharmacy Menu"
+        android:text="@string/pharmacy_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnMap" />
@@ -107,9 +108,18 @@
         android:layout_width="347dp"
         android:layout_height="48dp"
         android:layout_marginTop="400dp"
-        android:text="Map"
+        android:text="@string/map"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnChangeLanguage"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:text="@string/change_language"
+        android:textSize="8sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 

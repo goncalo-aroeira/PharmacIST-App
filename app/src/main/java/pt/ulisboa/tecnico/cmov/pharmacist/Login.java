@@ -1,6 +1,9 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,11 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
@@ -24,7 +29,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 public class Login extends AppCompatActivity {
 
     private EditText etEmail, etPassword;
-    private Button btnLogin, btnGoToRegister;
+    private Button btnLogin, btnGoToRegister, btnChangeLanguage;
 
     private TextView tvLoginAsGuest;
     private String userEmail, userPass;
@@ -34,6 +39,7 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadLocale();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -54,11 +60,14 @@ public class Login extends AppCompatActivity {
         tvLoginAsGuest = findViewById(R.id.tvLoginAsGuest);
         firebaseDBHandler = new FirebaseDBHandler();
         userLocalStore = new UserLocalStore(this);
-
+        btnChangeLanguage = findViewById(R.id.btnChangeLanguage);
         btnLogin.setOnClickListener(this::onLoginButtonClick);
         btnGoToRegister.setOnClickListener(this::onRegisterButtonClick);
 
         tvLoginAsGuest.setOnClickListener(this::onLoginAsGuestClick);
+        btnChangeLanguage.setOnClickListener(v -> {
+            showChangeLanguageDialog();
+        });
     }
 
     private void onLoginButtonClick(View view) {
@@ -139,4 +148,39 @@ public class Login extends AppCompatActivity {
         etEmail.setText("");
         etPassword.setText("");
     }
+
+    private void showChangeLanguageDialog() {
+        final String [] listItems = {"English", "Portuguese"};
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(Login.this);
+        mBuilder.setTitle("Choose Language");
+        mBuilder.setSingleChoiceItems(listItems, -1, (dialogInterface, i) -> {
+            if (i == 0){
+                setLocale("en");
+                recreate();
+            } else if (i == 1){
+                setLocale("pt");
+                recreate();
+            }
+            dialogInterface.dismiss();
+        });
+        AlertDialog mDialog = mBuilder.create();
+        mDialog.show();
+    }
+    private void setLocale(String language) {
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+        Configuration configuration = new Configuration();
+        configuration.locale = locale;
+        getBaseContext().getResources().updateConfiguration(configuration, getBaseContext().getResources().getDisplayMetrics());
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", language);
+        editor.apply();
+    }
+
+    public void loadLocale(){
+        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        setLocale(language);
+    }
+
 }

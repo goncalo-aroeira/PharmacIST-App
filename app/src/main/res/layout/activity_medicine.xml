@@ -17,14 +17,14 @@
         android:gravity="center"
         android:inputType="text"
         android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
-        android:text="Medicine Menu" />
+        android:text="@string/medicine_menu" />
 
     <SearchView
         android:id="@+id/searchBarValue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:iconifiedByDefault="false"
-        android:queryHint="Search..." />
+        android:queryHint="@string/search" />
 
 
     <com.google.android.material.button.MaterialButton
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_margin="10dp"
-        android:text="+ Add" />
+        android:text="@string/add" />
 
 
     <ListView

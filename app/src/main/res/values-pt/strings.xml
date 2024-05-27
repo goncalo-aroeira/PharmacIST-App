@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PharmacIST</string>
+
+    <string name="welcome">Bem Vindo</string>
+    <string name="map">Mapa</string>
+    <string name="pharmacy_menu">Menu Famácias</string>
+    <string name="medicine_menu">Menu Medicamentos</string>
+    <string name="register">Registar</string>
+    <string name="login">Entrar</string>
+    <string name="logout">Sair</string>
+    <string name="upgrade">Criar conta</string>
+    <string name="email">Email</string>
+    <string name="password">Palavra Passe</string>
+    <string name="name">Nome</string>
+    <string name="click_here">Clique aqui para entrar como guest</string>
+    <string name="enter_adress">Insira email</string>
+    <string name="search">PESQUISAR</string>
+    <string name="change_language">Mudar Língua</string>
+    <string name="add">+ Adicionar</string>
+    <string name="search_medicine">Procurar Medicamento</string>
+    <string name="instructions">Procure o medicamento que deseja adicionar à farmácia</string>
+    <string name="add_pharmacy">Adicionar Farmácia</string>
+    <string name="add_change_photo">Adicionar/Mudar Fotografia</string>
+    <string name="pharmacy_name">Nome da Farmácia</string>
+    <string name="pharmacy_address">Morada da Farmácia</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="pick_on_map">Escolher no Mapa</string>
+    <string name="current_location">Localização Atual</string>
+    <string name="create_medicine">Criar Medicamento</string>
+    <string name="medicine_name">Nome do Medicamento</string>
+    <string name="medicine_description">Descreva o propósito ou método de utilização</string>
+    <string name="scan">Escanear Código de Barras</string>
+    <string name="add_manually">Adicionar manualmente</string>
+    <string name="edit">Editar</string>
+    <string name="add_medicine">Adicionar Medicamento</string>
+    <string name="navigate_to_pharmacy">Navegar para Farmácia</string>
+
+
+
+</resources>
