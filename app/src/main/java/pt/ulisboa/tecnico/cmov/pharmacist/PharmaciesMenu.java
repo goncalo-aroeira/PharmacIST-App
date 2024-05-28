@@ -11,6 +11,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SearchView;
 
@@ -108,6 +109,8 @@ public class PharmaciesMenu extends AppCompatActivity {
         lvPharmacies = findViewById(R.id.lvPharmacies);
         searchBarValue = findViewById(R.id.searchBarValue);
         btnAddPharmacy = findViewById(R.id.btnAddPharmacy);
+        ImageButton btnBack = findViewById(R.id.btnBack);  // Get the ImageButton
+        btnBack.setOnClickListener(v -> finish());  // Set the back button to finish the activity
 
         dbHandler = new FirebaseDBHandler();
 

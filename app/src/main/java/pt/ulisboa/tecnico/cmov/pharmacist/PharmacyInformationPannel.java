@@ -195,6 +195,8 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             @Override
             public void onSuccess() {
                 Toast.makeText(PharmacyInformationPannel.this, "Pharmacy flagged successfully", Toast.LENGTH_SHORT).show();
+                pharmacy.setFlagged(true);
+                button.setImageResource(R.drawable.ic_favorite_full);
             }
 
             @Override

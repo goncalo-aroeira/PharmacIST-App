@@ -166,8 +166,9 @@ public class FirebaseDBHandler {
                                 newPharmacy.setFlagged(true);
                                 Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is flagged and hidden.");
                             }
-
-                            allPharmacies.add(newPharmacy);
+                            else {
+                                allPharmacies.add(newPharmacy);
+                            }
                         }
 
                         Log.d("loadPharmacies", "Pharmacies loaded successfully. Count: " + allPharmacies.size());
