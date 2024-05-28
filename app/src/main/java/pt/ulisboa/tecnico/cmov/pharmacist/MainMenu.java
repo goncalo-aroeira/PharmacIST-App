@@ -1,25 +1,29 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Objects;
-
+import java.util.Locale;
+import android.app.Activity;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.Map;
 
 public class MainMenu extends AppCompatActivity {
 
-    Button btnMedicine, btnPharmacy, btnMap, btnLogout, btnUpgradeAccount;
+    Button btnMedicine, btnPharmacy, btnMap, btnLogout, btnUpgradeAccount, btnChangeLanguage;
 
     TextView tvWelcome;
 
@@ -28,6 +32,7 @@ public class MainMenu extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadLocale();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main_menu);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -49,6 +54,7 @@ public class MainMenu extends AppCompatActivity {
         btnLogout = findViewById(R.id.btnLogout);
         btnUpgradeAccount = findViewById(R.id.btnUpgradeAccount);
         userLocalStore = new UserLocalStore(this);
+        btnChangeLanguage = findViewById(R.id.btnChangeLanguage);
 
         String greeting = userLocalStore.getLoggedInName() + ",";
         tvWelcome.setText(greeting);
@@ -57,6 +63,9 @@ public class MainMenu extends AppCompatActivity {
         btnPharmacy.setOnClickListener(v -> startActivity(new Intent(MainMenu.this, PharmaciesMenu.class)));
         btnMap.setOnClickListener(v -> startActivity(new Intent(MainMenu.this, Map.class)));
 
+        btnChangeLanguage.setOnClickListener(v -> {
+            showChangeLanguageDialog();
+        });
         if (Objects.equals(userLocalStore.getLoggedInName(), "Guest")){
             btnUpgradeAccount.setVisibility(View.VISIBLE);
             btnUpgradeAccount.setOnClickListener(v -> {
@@ -73,5 +82,41 @@ public class MainMenu extends AppCompatActivity {
         userLocalStore.clearLoginDetails();
         startActivity(new Intent(MainMenu.this, Login.class));
         finish();
+    }
+
+    private void showChangeLanguageDialog() {
+        final String [] listItems = {"English", "Portuguese"};
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainMenu.this);
+        mBuilder.setTitle("Choose Language");
+        mBuilder.setSingleChoiceItems(listItems, -1, (dialogInterface, i) -> {
+            if (i == 0){
+                setLocale("en");
+                recreate();
+            } else if (i == 1){
+                setLocale("pt");
+                recreate();
+            }
+            dialogInterface.dismiss();
+        });
+        AlertDialog mDialog = mBuilder.create();
+        mDialog.show();
+    }
+
+
+    private void setLocale(String language) {
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+        Configuration configuration = new Configuration();
+        configuration.locale = locale;
+        getBaseContext().getResources().updateConfiguration(configuration, getBaseContext().getResources().getDisplayMetrics());
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", language);
+        editor.apply();
+    }
+
+    public void loadLocale(){
+        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        setLocale(language);
     }
 }

@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="200dp"
         android:ems="10"
-        android:hint="Email"
+        android:hint="@string/email"
         android:inputType="textEmailAddress"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:ems="10"
-        android:hint="Password"
+        android:hint="@string/password"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,7 +39,7 @@
         android:layout_width="206dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="34dp"
-        android:text="Register"
+        android:text="@string/register"
         app:layout_constraintBottom_toTopOf="@+id/tvLoginAsGuest"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -49,7 +49,7 @@
         android:layout_width="206dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="36dp"
-        android:text="Login"
+        android:text="@string/login"
         app:layout_constraintBottom_toTopOf="@+id/btnRegister"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -60,12 +60,20 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="124dp"
         android:gravity="center"
-        android:text="Click here to enter as guest"
+        android:text="@string/click_here"
         android:textAppearance="@style/TextAppearance.PharmacIST.Body1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
+    <Button
+        android:id="@+id/btnChangeLanguage"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:text="@string/change_language"
+        android:textSize="8sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

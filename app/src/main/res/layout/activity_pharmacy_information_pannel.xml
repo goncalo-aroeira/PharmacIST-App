@@ -42,6 +42,7 @@
         app:layout_constraintBottom_toTopOf="@+id/map"
         app:layout_constraintStart_toEndOf="@+id/ivPhoto" />
 
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMedicines"
         android:layout_width="353dp"
@@ -51,17 +52,17 @@
         android:layout_marginBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.476"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button_add_medicine"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="130dp"
-        android:text="Add Medicine Stock"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
-        app:layout_constraintStart_toEndOf="@+id/textView6" />
-
+        android:text="@string/add_medicine"
+        app:layout_constraintBottom_toTopOf="@+id/button_navigate_to_pharmacy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/materialDivider3" />
 
     <com.google.android.material.divider.MaterialDivider
         android:id="@+id/materialDivider3"
@@ -87,20 +88,21 @@
         android:id="@+id/button_navigate_to_pharmacy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Navigate there"
+        android:layout_marginTop="48dp"
+        android:text="@string/navigate_to_pharmacy"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.962"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map" />
+        app:layout_constraintTop_toTopOf="@+id/recyclerViewMedicines" />
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="380dp"
         android:layout_height="223dp"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivPhoto" />
 

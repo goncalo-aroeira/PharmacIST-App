@@ -3,14 +3,14 @@
     <item
         android:id="@+id/item_scan"
         android:icon="@android:drawable/ic_menu_camera"
-        android:title="Scan Barcode" />
+        android:title="@string/scan" />
     <item
         android:id="@+id/item_add"
         android:icon="@android:drawable/ic_menu_add"
-        android:title="Add manually" />
+        android:title="@string/add_manually" />
     <item
         android:id="@+id/item_edit"
         android:icon="@android:drawable/ic_menu_edit"
-        android:title="Edit" />
+        android:title="@string/edit" />
 
 </menu>
