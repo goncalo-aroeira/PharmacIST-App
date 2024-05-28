@@ -168,6 +168,8 @@ public class FirebaseDBHandler {
                             if (flaggedPharmacies.contains(newPharmacy.getId())) {
                                 newPharmacy.setFlagged(true);
                                 Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is flagged and hidden.");
+                            } else {
+                                allPharmacies.add(newPharmacy);
                             }
 
                             allPharmacies.add(newPharmacy);
@@ -565,16 +567,21 @@ public class FirebaseDBHandler {
     /* ============================================================================================
                                            META-DATA CONTROL
       ============================================================================================= */
+
+
     public void flagPharmacy(String userId, String pharmacyId, OnFlaggedPharmacy listener) {
-        // Flagging the pharmacy
         DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId);
 
+        Log.d("Flagging", "Attempting to flag pharmacy: " + pharmacyId + " by user: " + userId);
+
         userRef.child("flagged_pharmacies").child(pharmacyId).setValue(true).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                Log.d("Flagging", "Successfully flagged pharmacy: " + pharmacyId);
                 checkAndHandleUserSuspension(userId, listener);
                 checkAndHandlePharmacySuspension(pharmacyId, listener);
             } else {
+                Log.e("Flagging", "Failed to flag pharmacy: " + pharmacyId, task.getException());
                 listener.onFailure(task.getException());
             }
         });
@@ -582,15 +589,22 @@ public class FirebaseDBHandler {
 
     private void checkAndHandleUserSuspension(String userId, OnFlaggedPharmacy listener) {
         DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child("flagged_pharmacies");
+
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 long flagCount = dataSnapshot.getChildrenCount();
+                Log.d("SuspensionCheck", "User " + userId + " flag count: " + flagCount);
+
                 if (flagCount > 5) {  // Check if flags exceed the limit
                     DatabaseReference userStatusRef = databaseReference.child(USER_NODE).child(userId).child("suspended");
                     userStatusRef.setValue(true).addOnSuccessListener(aVoid -> {
-                        listener.onAccountSuspended();  // Notify that the account has been suspended
-                    }).addOnFailureListener(e -> listener.onFailure(e));
+                        Log.d("SuspensionCheck", "User " + userId + " has been suspended.");
+                        listener.onAccountSuspended();
+                    }).addOnFailureListener(e -> {
+                        Log.e("SuspensionCheck", "Failed to suspend user " + userId, e);
+                        listener.onFailure(e);
+                    });
                 } else {
                     listener.onSuccess();
                 }
@@ -598,6 +612,7 @@ public class FirebaseDBHandler {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("SuspensionCheck", "Failed during user suspension check", databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
@@ -605,15 +620,22 @@ public class FirebaseDBHandler {
 
     private void checkAndHandlePharmacySuspension(String pharmacyId, OnFlaggedPharmacy listener) {
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("flagged_by");
+
         pharmacyRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 long flagCount = dataSnapshot.getChildrenCount();
+                Log.d("SuspensionCheck", "Pharmacy " + pharmacyId + " flag count: " + flagCount);
+
                 if (flagCount > 3) {  // Assuming suspension if flagged more than 3 times
                     DatabaseReference pharmacyStatusRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("suspended");
                     pharmacyStatusRef.setValue(true).addOnSuccessListener(aVoid -> {
+                        Log.d("SuspensionCheck", "Pharmacy " + pharmacyId + " has been suspended.");
                         listener.onPharmacySuspended();
-                    }).addOnFailureListener(e -> listener.onFailure(e));
+                    }).addOnFailureListener(e -> {
+                        Log.e("SuspensionCheck", "Failed to suspend pharmacy " + pharmacyId, e);
+                        listener.onFailure(e);
+                    });
                 } else {
                     listener.onSuccess();
                 }
@@ -621,10 +643,13 @@ public class FirebaseDBHandler {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("SuspensionCheck", "Failed during pharmacy suspension check", databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
     }
+
+
 
 
 

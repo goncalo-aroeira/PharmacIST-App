@@ -201,6 +201,8 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
             @Override
             public void onSuccess() {
                 Toast.makeText(PharmacyInformationPannel.this, "Pharmacy flagged successfully", Toast.LENGTH_SHORT).show();
+                pharmacy.setFlagged(true);
+                button.setImageResource(R.drawable.ic_favorite_full);
             }
 
             @Override
@@ -219,15 +221,6 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
             }
         });
 
-    }
-
-
-    private void updateFlagButton(boolean isFlagged, ImageButton button) {
-        if (isFlagged) {
-            button.setImageResource(R.drawable.ic_favorite_full);
-        } else {
-            button.setImageResource(R.drawable.ic_favorite_outline);
-        }
     }
 
 
