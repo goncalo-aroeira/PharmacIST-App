@@ -167,16 +167,22 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
 
     public void savePharmacy() {
-        String name = etName.getText().toString();
-        String address = etAddress.getText().toString();
+        String name = etName.getText().toString().trim();
+        String address = etAddress.getText().toString().trim();
 
+        // Check if name or address fields are empty
         if (name.isEmpty() || address.isEmpty()) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Please fill all the fields", Toast.LENGTH_SHORT);
-            toast.show();
-            return;
+            Toast.makeText(getApplicationContext(), "Please fill all fields before saving.", Toast.LENGTH_SHORT).show();
+            return; // Return early if any field is empty
         }
 
+        // If the image has not been set, you might also want to check that
+        if (imageBitmap == null) {
+            Toast.makeText(getApplicationContext(), "Please add an image for the pharmacy.", Toast.LENGTH_SHORT).show();
+            return; // Return early if the image is not set
+        }
 
+        // Create a new Pharmacy object
         Pharmacy pharmacy = new Pharmacy(name, address);
 
         if (imageBitmap != null) {
@@ -184,26 +190,23 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
             pharmacy.setImageBytes(imageByte);
         }
 
+        // add an id to the pharmacy
         pharmacy.generateId();
 
         firebaseDBHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnChangeListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(AddPharmacy.this, "Pharmacy added successfully", Toast.LENGTH_SHORT).show();
-                navigatePharmacyActivity();
+                finish(); // Finish this activity and return to the previous screen
             }
 
             @Override
             public void onFailure(Exception e) {
-                Toast toast = Toast.makeText(getApplicationContext(), "System failed to add the pharmacy ", Toast.LENGTH_SHORT);
-                toast.show();
-                e.printStackTrace();
-                finish();
+                Toast.makeText(getApplicationContext(), "Failed to add the pharmacy: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-
-
     }
+
 
     @Override
     public void onCameraButtonClick() {

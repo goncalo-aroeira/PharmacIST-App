@@ -129,6 +129,11 @@ public class CreateMedicine extends AppCompatActivity {
             return;
         }
 
+        if (imageBitmap == null) {
+            Toast.makeText(this, "Please add an image for the medicine.", Toast.LENGTH_SHORT).show();
+            return; // Check if the image has been set.
+        }
+
         Medicine medicine = new Medicine(name, description);
         medicine.generateId();
 
@@ -140,6 +145,7 @@ public class CreateMedicine extends AppCompatActivity {
             public void onSuccess() {
                 Toast.makeText(CreateMedicine.this, medicine.getName() + " added successfully", Toast.LENGTH_SHORT).show();
                 navigateToMedicineActivity();
+                finish();
             }
 
             @Override

@@ -178,8 +178,9 @@ public class FirebaseDBHandler {
                             } else {
                                 allPharmacies.add(newPharmacy);
                             }
-
-                            allPharmacies.add(newPharmacy);
+                            else {
+                                allPharmacies.add(newPharmacy);
+                            }
                         }
 
                         Log.d("loadPharmacies", "Pharmacies loaded successfully. Count: " + allPharmacies.size());
