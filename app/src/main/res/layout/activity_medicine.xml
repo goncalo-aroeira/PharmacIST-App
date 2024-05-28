@@ -19,12 +19,11 @@
         android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
         android:text="@string/medicine_menu" />
 
-    <SearchView
-        android:id="@+id/searchBarValue"
+    <AutoCompleteTextView
+        android:id="@+id/searchInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:iconifiedByDefault="false"
-        android:queryHint="@string/search" />
+        android:hint="SEARCH" />
 
 
     <com.google.android.material.button.MaterialButton
@@ -37,13 +36,10 @@
 
 
     <ListView
-        android:id="@+id/lvPharmacies"
+        android:id="@+id/pharmacyListView"
         android:layout_width="match_parent"
-        android:layout_height="692dp"
-        android:layout_marginStart="14dp"
-        android:layout_marginEnd="14dp">
+        android:layout_height="match_parent" />
 
-    </ListView>
 
 
 </LinearLayout>

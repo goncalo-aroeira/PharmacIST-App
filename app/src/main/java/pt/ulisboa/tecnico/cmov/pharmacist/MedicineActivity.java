@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import static android.content.ContentValues.TAG;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,14 +10,21 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.MatrixCursor;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.CursorAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -26,6 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -34,7 +44,9 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -48,8 +60,6 @@ import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 public class MedicineActivity extends AppCompatActivity {
 
     // UI Components
-    private SearchView searchBarValue;
-    private ListView lvPharmacies;
     private MaterialButton btnMenu;
 
     // Domain
@@ -57,7 +67,6 @@ public class MedicineActivity extends AppCompatActivity {
     private CursorAdapter suggestionAdapter;
     private Set<String> allMedicineNames;
 
-    private FirebaseDBHandler dbHandler;
 
     // Activity Result Launchers
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -83,7 +92,6 @@ public class MedicineActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        loadLocale();
         setContentView(R.layout.activity_medicine);
         EdgeToEdge.enable(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -92,118 +100,14 @@ public class MedicineActivity extends AppCompatActivity {
             return insets;
         });
 
-        lvPharmacies = findViewById(R.id.lvPharmacies);
-        searchBarValue = findViewById(R.id.searchBarValue);
+        Log.d(TAG, "onCreate: Loading Medicine Activity...");
         btnMenu = findViewById(R.id.btnOpenPopupMenu);
         btnMenu.setOnClickListener(this::showMenu);
 
-        loadPharmacies();
-        loadMedicines();
-        setupSearchView();
-    }
-
-    private void loadMedicines(){
-        allMedicineNames = new HashSet<>();
-        FirebaseDBHandler dbHandler = new FirebaseDBHandler();
-        dbHandler.getAllMedicines(new FirebaseDBHandler.OnMedicinesLoadedListener() {
-            @Override
-            public void onMedicinesLoaded(ArrayList<Medicine> medicines) {
-                Log.d("Medicine Activity Page", "Medicines: " + medicines.size() + " medicines loaded.");
-                for (Medicine medicine : medicines) {
-                    allMedicineNames.add(medicine.getName());
-                }
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("Error", "MedicineActivity: Failed to load medicines", e);
-            }
-        });
-    }
-
-    private void loadPharmacies() {
-        FirebaseDBHandler dbHandler = new FirebaseDBHandler();
-        UserLocalStore userLocalStore = new UserLocalStore(this);
-        dbHandler.loadPharmacies(userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnPharmaciesLoadedListener() {
-            @Override
-            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
-                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
-                lvPharmacies.setAdapter(pharmacyAdapter);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("MedicineActivity", "Failed to load pharmacies", e);
-            }
-        });
-        PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
-        lvPharmacies.setAdapter(pharmacyAdapter);
-    }
-
-    private void setupSearchView() {
-
-        String[] from = new String[]{"name"};
-        int[] to = new int[]{android.R.id.text1};
-
-        suggestionAdapter = new SimpleCursorAdapter(this,
-                android.R.layout.simple_dropdown_item_1line,
-                null,
-                from,
-                to,
-                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-
-        searchBarValue.setSuggestionsAdapter(suggestionAdapter);
-        searchBarValue.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                filterPharmacies(query);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                filterPharmacies(newText);
-                updateSuggestions(newText);
-                return true;
-            }
-        });
-    }
-
-    private void updateSuggestions(String query) {
-        Log.d("MedicineActivity", "updateSuggestions: query: " + query);
-        String[] columns = new String[]{"_id", "name"};
-        MatrixCursor cursor = new MatrixCursor(columns);
-        int id = 0;
-        for (String name : allMedicineNames) {
-            if (name.toLowerCase().contains(query.toLowerCase())) {
-                cursor.addRow(new Object[]{id++, name});
-                Log.d("MedicineActivity", "Adding suggestion: " + name + " with id: " + id);
-            }
-        }
-        suggestionAdapter.changeCursor(cursor);
-    }
-
-
-
-
-    private void filterPharmacies(String query) {
-        dbHandler = new FirebaseDBHandler();
-        ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
-
-        dbHandler.searchPharmaciesWithMedicine(query, new FirebaseDBHandler.OnPharmaciesWithMedicineListener() {
-            @Override
-            public void onPharmaciesFound(ArrayList<Pharmacy> pharmacies) {
-                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
-                lvPharmacies.setAdapter(pharmacyAdapter);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("MedicineActivity", "Failed to load pharmacies", e);
-            }
-        });
+        loadLocale();
 
     }
+
 
     private void showMenu(View v) {
         PopupMenu popup = new PopupMenu(getApplicationContext(), v);
@@ -285,4 +189,5 @@ public class MedicineActivity extends AppCompatActivity {
         String language = prefs.getString("My_Lang", "");
         setLocale(language);
     }
+
 }

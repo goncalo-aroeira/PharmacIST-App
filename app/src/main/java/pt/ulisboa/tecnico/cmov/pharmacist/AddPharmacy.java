@@ -179,16 +179,18 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
 
         Pharmacy pharmacy = new Pharmacy(name, address);
 
-        String imageByte = utils.bitmapToByteArray(imageBitmap);
-        pharmacy.setImageBytes(imageByte);
+        if (imageBitmap != null) {
+            String imageByte = utils.bitmapToByteArray(imageBitmap);
+            pharmacy.setImageBytes(imageByte);
+        }
 
-        // add an id to the pharmacy
         pharmacy.generateId();
 
         firebaseDBHandler.addPharmacy(pharmacy, new FirebaseDBHandler.OnChangeListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(AddPharmacy.this, "Pharmacy added successfully", Toast.LENGTH_SHORT).show();
+                navigatePharmacyActivity();
             }
 
             @Override
@@ -196,6 +198,7 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
                 Toast toast = Toast.makeText(getApplicationContext(), "System failed to add the pharmacy ", Toast.LENGTH_SHORT);
                 toast.show();
                 e.printStackTrace();
+                finish();
             }
         });
 
@@ -295,5 +298,10 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
         SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
         String language = prefs.getString("My_Lang", "");
         setLocale(language);
+    }
+
+    public void navigatePharmacyActivity(){
+        Intent intent = new Intent(AddPharmacy.this, PharmaciesMenu.class);
+        startActivity(intent);
     }
 }
