@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -27,12 +28,14 @@ public class FirebaseDBHandler {
     private static final String NOTIFICATIONS_NODE = "notifications";
     private static final String FLAGGED_NODE = "flagged_pharmacies";
 
+    private final String TAG = "FirebaseDBHandler";
+
     private final DatabaseReference databaseReference;
     private ArrayList<Pharmacy> allPharmacies;
 
     public FirebaseDBHandler() {
         // Enable cache
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        //FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.keepSynced(true);
         allPharmacies = new ArrayList<>();
@@ -90,9 +93,13 @@ public class FirebaseDBHandler {
             if (task.isSuccessful()) {
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
                     Medicine medicine = new Medicine(
+                            snapshot.child("id").getValue(String.class),
                             snapshot.child("name").getValue(String.class),
                             snapshot.child("usage").getValue(String.class)
                     );
+                    if (snapshot.child("imageBytes").exists()) {
+                        medicine.setImageBytes(snapshot.child("imageBytes").getValue(String.class));
+                    }
                     allMedicines.add(medicine);
                 }
                 listener.onMedicinesLoaded(allMedicines);
@@ -631,91 +638,8 @@ public class FirebaseDBHandler {
     /* ============================================================================================
                                            SEARCH DYNAMICALLY METHODS
       ============================================================================================= */
-    public void searchPharmaciesWithMedicine(String searchQuery, OnPharmaciesWithMedicineListener listener) {
-        DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
-        Query query = medicinesRef.orderByChild("name").startAt(searchQuery).endAt(searchQuery + "\uf8ff");
 
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot medicinesSnapshot) {
-                ArrayList<String> medicineIds = new ArrayList<>();
-                for (DataSnapshot snapshot : medicinesSnapshot.getChildren()) {
-                    String medicineId = snapshot.getKey();
-                    medicineIds.add(medicineId);
-                }
 
-                if (medicineIds.isEmpty()) {
-                    listener.onPharmaciesFound(new ArrayList<>());
-                    return;
-                }
-
-                fetchPharmaciesByMedicineIds(medicineIds, listener);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-    private void fetchPharmaciesByMedicineIds(ArrayList<String> medicineIds, OnPharmaciesWithMedicineListener listener) {
-        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
-        ArrayList<String> pharmacyIds = new ArrayList<>();
-
-        for (String medicineId : medicineIds) {
-            Query query = inventoryRef.orderByChild("medicine_id").equalTo(medicineId);
-
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot inventorySnapshot) {
-                    for (DataSnapshot snapshot : inventorySnapshot.getChildren()) {
-                        String pharmacyId = snapshot.child("pharmacy_id").getValue(String.class);
-                        if (!pharmacyIds.contains(pharmacyId)) {
-                            pharmacyIds.add(pharmacyId);
-                        }
-                    }
-
-                    if (pharmacyIds.isEmpty()) {
-                        listener.onPharmaciesFound(new ArrayList<>());
-                    } else {
-                        fetchPharmacies(pharmacyIds, listener);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    listener.onFailure(databaseError.toException());
-                }
-            });
-        }
-    }
-
-    private void fetchPharmacies(ArrayList<String> pharmacyIds, OnPharmaciesWithMedicineListener listener) {
-        DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
-        ArrayList<Pharmacy> pharmacies = new ArrayList<>();
-
-        for (String pharmacyId : pharmacyIds) {
-            pharmaciesRef.child(pharmacyId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot pharmacySnapshot) {
-                    Pharmacy pharmacy = pharmacySnapshot.getValue(Pharmacy.class);
-                    if (pharmacy != null) {
-                        pharmacies.add(pharmacy);
-                    }
-
-                    if (pharmacies.size() == pharmacyIds.size()) {
-                        listener.onPharmaciesFound(pharmacies);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    listener.onFailure(databaseError.toException());
-                }
-            });
-        }
-    }
 
     /* ============================================================================================
                                            LISTENER INTERFACES
@@ -794,12 +718,6 @@ public class FirebaseDBHandler {
         void onFailure(Exception e);  // Called when there is an error in the flagging process
     }
 
-
-    public interface OnPurchaseMedicineListener extends FirebaseDBHandlerListener {
-        void onNotEnoughStock();
-
-        void onSuccess();
-    }
 
     public interface OnPurchaseMedicineListener extends FirebaseDBHandlerListener {
         void onNotEnoughStock();
