@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
@@ -41,6 +42,10 @@ public class PharmaciesMenu extends AppCompatActivity {
     private SearchView searchBarValue;
     private ListView lvPharmacies;
     private FirebaseDBHandler dbHandler;
+    private LatLng currentUserLocation;
+    private static final int LOCATION_REQUEST_CODE = 101;
+    private HashMap<String, LatLng> addressCache = new HashMap<>();
+    PharmacyAdapter pharmacyAdapter;
 
 
     @Override
@@ -53,6 +58,12 @@ public class PharmaciesMenu extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        } else {
+            getCurrentLocation();
+        }
 
         initializeViewsAndFirebase();
     }
@@ -78,8 +89,7 @@ public class PharmaciesMenu extends AppCompatActivity {
             public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
                 Log.d("PharmaciesMenu", "Pharmacies loaded: " + pharmacies.size());
                 PharmaciesMenu.this.pharmacies = pharmacies;
-                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(PharmaciesMenu.this, pharmacies);
-                lvPharmacies.setAdapter(pharmacyAdapter);
+                calculateDistancesAndUpdateList();
             }
 
             @Override
@@ -145,20 +155,97 @@ public class PharmaciesMenu extends AppCompatActivity {
         lvPharmacies.setAdapter(pharmacyAdapter);
     }
 
+
+
+    private void updatePharmacyList(ArrayList<Pharmacy> pharmacies) {
+        pharmacyAdapter = new PharmacyAdapter(this, pharmacies);
+        lvPharmacies.setAdapter(pharmacyAdapter);
+    }
+
+    private void sortPharmaciesByDistance() {
+        if (pharmacies == null) {
+            Log.e("MedicineInformationPannel", "Pharmacies data is not available.");
+            return;
+        }
+        Collections.sort(pharmacies, Comparator.comparingDouble(Pharmacy::getDistance)
+        );
+        updatePharmacyList(pharmacies);
+    }
+
+
+
+    private double calculateDistance(LatLng start, LatLng end) {
+        float[] results = new float[1];
+        Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, results);
+        Log.d("MedicineInformationPannel", "Distance: " + results[0] / 1000 + " km");
+        return results[0] / 1000; // Convert meters to kilometers
+    }
+
+    private void getCurrentLocation() {
+        FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    sortPharmaciesByDistance();  // Call sorting right after location is obtained
+                } else {
+                    Log.e("MedicineInformationPannel", "Location is null");
+                }
+            }).addOnFailureListener(e -> Log.e("MedicineInformationPannel", "Failed to get location", e));
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        }
+    }
+
     private LatLng geocodeAddress(String address) {
-        Log.d("Map", "Geocoding address: " + address);
+        if (addressCache.containsKey(address)) {
+            return addressCache.get(address);
+        }
         Geocoder geocoder = new Geocoder(this);
+        List<Address> addresses;
         try {
-            List<Address> addresses = geocoder.getFromLocationName(address, 1);
+            addresses = geocoder.getFromLocationName(address, 1);
             if (addresses != null && !addresses.isEmpty()) {
                 double latitude = addresses.get(0).getLatitude();
                 double longitude = addresses.get(0).getLongitude();
-                return new LatLng(latitude, longitude);
+                LatLng latLng = new LatLng(latitude, longitude);
+                addressCache.put(address, latLng);
+                return latLng;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("Geocode", "Failed to geocode address", e);
         }
         return null;
+    }
+
+    private void calculateDistancesAndUpdateList() {
+        if (currentUserLocation == null) {
+            Log.e("MedicineInformationPannel", "Current location is not available.");
+            return;
+        }
+
+        FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    for (Pharmacy pharmacy : pharmacies) {
+                        LatLng pharmacyLocation = geocodeAddress(pharmacy.getAddress());
+                        if (pharmacyLocation != null) {
+                            double distance = calculateDistance(currentUserLocation, pharmacyLocation);
+                            pharmacy.setDistance(distance);
+                        } else {
+                            pharmacy.setDistance(Double.MAX_VALUE);  // Set a high value if location is not found
+                        }
+                    }
+                    sortPharmaciesByDistance();
+                } else {
+                    Log.e("MedicineInformationPannel", "Location is null");
+                }
+            }).addOnFailureListener(e -> Log.e("MedicineInformationPannel", "Failed to get location", e));
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        }
     }
 
 }

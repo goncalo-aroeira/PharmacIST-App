@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
-import static androidx.core.location.LocationManagerCompat.getCurrentLocation;
-
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -36,6 +34,7 @@ import java.util.List;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 
 public class MedicineInformationPannel extends AppCompatActivity {
@@ -102,8 +101,25 @@ public class MedicineInformationPannel extends AppCompatActivity {
 
     private void fetchAllPharmacies(Medicine medicine) {
         allPharmacies = dbHandler.getPharmacies();
-        filterPharmaciesWithMedicine(medicine);
-        calculateDistancesAndUpdateList();
+
+        UserLocalStore user = new UserLocalStore(this);
+
+        String userId = user.getLoggedInId();
+
+        dbHandler.loadPharmacies(userId, new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                Log.d("PharmaciesMenu", "Pharmacies loaded: " + pharmacies.size());
+                MedicineInformationPannel.this.allPharmacies = pharmacies;
+                filterPharmaciesWithMedicine(medicine);
+                calculateDistancesAndUpdateList();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("PharmaciesMenu", "Failed to load pharmacies", e);
+            }
+        });
     }
 
     private void filterPharmaciesWithMedicine(Medicine medicine) {
