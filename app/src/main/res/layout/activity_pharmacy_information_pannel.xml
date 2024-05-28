@@ -115,5 +115,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name" />
 
+    <ImageButton
+        android:id="@+id/imageButton_flag"
+        android:layout_width="60dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_favorite_outline"
+        app:layout_constraintEnd_toEndOf="@id/imageButton_favorite"
+        app:layout_constraintTop_toBottomOf="@id/imageButton_favorite" />
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

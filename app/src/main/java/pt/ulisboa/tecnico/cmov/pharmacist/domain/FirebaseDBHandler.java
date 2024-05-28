@@ -523,56 +523,66 @@ public class FirebaseDBHandler {
                                            META-DATA CONTROL
       ============================================================================================= */
     public void flagPharmacy(String userId, String pharmacyId, OnFlaggedPharmacy listener) {
-        // On user side
-        DatabaseReference usersRef = databaseReference.child(USER_NODE).child(userId);
-        usersRef.child("flagged_pharmacies").child(pharmacyId).setValue(pharmacyId).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        long flaggedCount = dataSnapshot.child("flagged_pharmacies").getChildrenCount();
-                        if (flaggedCount > 5) {
-                            usersRef.child("suspended").setValue(true);
-                            listener.onAccountSuspended();
-                        }
-                        listener.onSuccess();
-                    }
+        // Flagging the pharmacy
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
+        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId);
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        listener.onFailure(databaseError.toException());
-                    }
-                });
+        userRef.child("flagged_pharmacies").child(pharmacyId).setValue(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                checkAndHandleUserSuspension(userId, listener);
+                checkAndHandlePharmacySuspension(pharmacyId, listener);
             } else {
                 listener.onFailure(task.getException());
             }
         });
-
-        // On pharmacy side
-        DatabaseReference pharmaciesRef = databaseReference.child(PHARMACIES_NODE);
-        pharmaciesRef.child("flagged_by").child(userId).setValue(userId).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                pharmaciesRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        long flaggedByCount = dataSnapshot.child("flagged_by").getChildrenCount();
-                        if (flaggedByCount > 3) {
-                            pharmaciesRef.child("suspended").setValue(true);
-                        }
-                        listener.onSuccess();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        listener.onFailure(databaseError.toException());
-                    }
-                });
-            } else {
-                listener.onFailure(task.getException());
-            }
-        });
-
     }
+
+    private void checkAndHandleUserSuspension(String userId, OnFlaggedPharmacy listener) {
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child("flagged_pharmacies");
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long flagCount = dataSnapshot.getChildrenCount();
+                if (flagCount > 5) {  // Check if flags exceed the limit
+                    DatabaseReference userStatusRef = databaseReference.child(USER_NODE).child(userId).child("suspended");
+                    userStatusRef.setValue(true).addOnSuccessListener(aVoid -> {
+                        listener.onAccountSuspended();  // Notify that the account has been suspended
+                    }).addOnFailureListener(e -> listener.onFailure(e));
+                } else {
+                    listener.onSuccess();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+    private void checkAndHandlePharmacySuspension(String pharmacyId, OnFlaggedPharmacy listener) {
+        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("flagged_by");
+        pharmacyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long flagCount = dataSnapshot.getChildrenCount();
+                if (flagCount > 3) {  // Assuming suspension if flagged more than 3 times
+                    DatabaseReference pharmacyStatusRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("suspended");
+                    pharmacyStatusRef.setValue(true).addOnSuccessListener(aVoid -> {
+                        listener.onPharmacySuspended();
+                    }).addOnFailureListener(e -> listener.onFailure(e));
+                } else {
+                    listener.onSuccess();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
 
 
     /* ============================================================================================
@@ -730,10 +740,11 @@ public class FirebaseDBHandler {
 
     }
 
-    public interface OnFlaggedPharmacy extends FirebaseDBHandlerListener {
-        void onSuccess();
-
-        void onAccountSuspended();
+    public interface OnFlaggedPharmacy extends FirebaseDBHandlerListener{
+        void onSuccess();  // Called when the pharmacy is successfully flagged
+        void onPharmacySuspended();  // Called when the pharmacy is suspended due to excessive flags
+        void onAccountSuspended();  // Called when the user account is suspended due to excessive flags
+        void onFailure(Exception e);  // Called when there is an error in the flagging process
     }
 
 }

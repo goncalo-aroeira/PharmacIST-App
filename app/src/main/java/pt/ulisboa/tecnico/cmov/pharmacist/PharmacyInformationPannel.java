@@ -125,13 +125,6 @@ public class PharmacyInformationPannel extends AppCompatActivity {
         ImageView pharmacyImageView = findViewById(R.id.ivPhoto);
         pharmacyImageView.setImageBitmap(imageBitmap);
 
-        /*if (pharmacy.isFavorite()) {
-            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_full);
-            addToFavoritesButton.setVisibility(View.VISIBLE);
-        } else {
-            ImageButton addToFavoritesButton = findViewById(R.id.imageButton_favorite_outline);
-            addToFavoritesButton.setVisibility(View.VISIBLE);
-        }*/
     }
 
 
@@ -151,6 +144,8 @@ public class PharmacyInformationPannel extends AppCompatActivity {
     private void setupButtons(Pharmacy pharmacy, LatLng pharmacyLocation) {
         setupNavigateButton(pharmacyLocation);
         setupAddToFavoritesButton(pharmacy);
+        ImageButton flagButton = findViewById(R.id.imageButton_flag);
+        flagButton.setOnClickListener(v -> toggleFlag(pharmacy, flagButton));
         setupAddMedicineButton(pharmacy);
     }
 
@@ -192,6 +187,43 @@ public class PharmacyInformationPannel extends AppCompatActivity {
             });
         });
     }
+
+    private void toggleFlag(Pharmacy pharmacy, ImageButton button) {
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        String userId = userLocalStore.getLoggedInId();
+        dbHandler.flagPharmacy(userId, pharmacy.getId(), new FirebaseDBHandler.OnFlaggedPharmacy() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(PharmacyInformationPannel.this, "Pharmacy flagged successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPharmacySuspended() {
+                Toast.makeText(PharmacyInformationPannel.this, "Pharmacy suspended due to flags", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onAccountSuspended() {
+                Toast.makeText(PharmacyInformationPannel.this, "Your account is suspended due to excessive flagging", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(PharmacyInformationPannel.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
+
+    private void updateFlagButton(boolean isFlagged, ImageButton button) {
+        if (isFlagged) {
+            button.setImageResource(R.drawable.ic_favorite_full);
+        } else {
+            button.setImageResource(R.drawable.ic_favorite_outline);
+        }
+    }
+
 
     private void setupAddMedicineButton(Pharmacy pharmacy) {
         Button addMedicineButton = findViewById(R.id.button_add_medicine);
