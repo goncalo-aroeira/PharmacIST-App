@@ -37,7 +37,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineListAdapter;
 
-public class AddMedicine extends AppCompatActivity {
+public class AddMedicine extends AppCompatActivity implements MedicineListAdapter.OnMedicineItemClickListener {
 
     private EditText searchMedicine;
     private RecyclerView medicineList;
@@ -87,12 +87,21 @@ public class AddMedicine extends AppCompatActivity {
         String medicine_key = intent.getStringExtra("medicine_key");
         String pharmacyId = intent.getStringExtra("pharmacy_id");
 
+        Log.d("AddMedicine", "onCreate:  pharmacyId: " + pharmacyId);
+        Log.d("AddMedicine", "onCreate:  medicineKey: " + medicine_key);
 
-        pharmacy = firebaseDBHandler.getPharmacyById(pharmacyId);
-        if (pharmacy == null) {
-            Toast.makeText(this, "Pharmacy not found", Toast.LENGTH_SHORT).show();
-            finish();
-        }
+        firebaseDBHandler.getPharmacyById(pharmacyId, new FirebaseDBHandler.OnPharmacyLoadedListener() {
+            @Override
+            public void onPharmacyLoaded(Pharmacy pharmacy) {
+                AddMedicine.this.pharmacy = pharmacy;
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(AddMedicine.this, "Failed to load pharmacy: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
 
         if (medicine_key != null) {
             Log.d("AddMedicine", "onCreate: medicine_key: " + medicine_key);
@@ -266,4 +275,8 @@ public class AddMedicine extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onMedicineClick(Medicine medicine) {
+        showConfirmDialog(medicine);
+    }
 }

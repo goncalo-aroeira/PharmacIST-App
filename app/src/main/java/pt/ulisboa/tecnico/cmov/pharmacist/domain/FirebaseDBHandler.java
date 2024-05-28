@@ -31,7 +31,10 @@ public class FirebaseDBHandler {
     private ArrayList<Pharmacy> allPharmacies;
 
     public FirebaseDBHandler() {
+        // Enable cache
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.keepSynced(true);
         allPharmacies = new ArrayList<>();
     }
 
@@ -185,18 +188,27 @@ public class FirebaseDBHandler {
         });
     }
 
-
-    public ArrayList<Pharmacy> getPharmacies() {
-        return allPharmacies;
-    }
-
-    public Pharmacy getPharmacyById(String id) {
-        for (Pharmacy pharmacy : allPharmacies) {
-            if (pharmacy.getId().equals(id)) {
-                return pharmacy;
+    public void getPharmacyById(String id, OnPharmacyLoadedListener listener) {
+        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(id);
+        pharmacyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Pharmacy pharmacy = new Pharmacy(
+                        dataSnapshot.child("id").getValue(String.class),
+                        dataSnapshot.child("name").getValue(String.class),
+                        dataSnapshot.child("address").getValue(String.class),
+                        dataSnapshot.child("imageBytes").getValue(String.class)
+                );
+                listener.onPharmacyLoaded(pharmacy);
             }
-        }
-        return null;
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    
+
     }
 
 
@@ -435,6 +447,37 @@ public class FirebaseDBHandler {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+    public void purchaseMedicineFromPharmacy(String medicineId, String pharmacyId, int quantity, OnPurchaseMedicineListener listener) {
+        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
+        Query query = inventoryRef.orderByChild("pharmacyId").equalTo(pharmacyId);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId)) {
+                        int currentQuantity = snapshot.child("quantity").getValue(Integer.class);
+
+                        if (currentQuantity < quantity) {
+                            listener.onNotEnoughStock();
+                        }
+                        else if (currentQuantity == quantity) {
+                            snapshot.getRef().removeValue();
+                        } else {
+                            int newQuantity = currentQuantity - quantity;
+                            snapshot.child("quantity").getRef().setValue(newQuantity);
+                            listener.onSuccess();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle error
             }
         });
     }
@@ -713,6 +756,10 @@ public class FirebaseDBHandler {
         void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies);
     }
 
+    public interface OnPharmacyLoadedListener extends FirebaseDBHandlerListener {
+        void onPharmacyLoaded(Pharmacy pharmacy);
+    }
+
     public interface OnGetFavoritesPharmacies extends FirebaseDBHandlerListener {
         void OnPharmaciesLoadedSuccessfully(ArrayList<String> pharmacies);
     }
@@ -745,6 +792,19 @@ public class FirebaseDBHandler {
         void onPharmacySuspended();  // Called when the pharmacy is suspended due to excessive flags
         void onAccountSuspended();  // Called when the user account is suspended due to excessive flags
         void onFailure(Exception e);  // Called when there is an error in the flagging process
+    }
+
+
+    public interface OnPurchaseMedicineListener extends FirebaseDBHandlerListener {
+        void onNotEnoughStock();
+
+        void onSuccess();
+    }
+
+    public interface OnPurchaseMedicineListener extends FirebaseDBHandlerListener {
+        void onNotEnoughStock();
+
+        void onSuccess();
     }
 
 }

@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,9 +12,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,7 +53,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
-public class PharmacyInformationPannel extends AppCompatActivity {
+public class PharmacyInformationPannel extends AppCompatActivity implements MedicineAdapter.OnMedicineItemClickListener{
 
     private FirebaseDBHandler dbHandler;
 
@@ -227,11 +233,27 @@ public class PharmacyInformationPannel extends AppCompatActivity {
 
     private void setupAddMedicineButton(Pharmacy pharmacy) {
         Button addMedicineButton = findViewById(R.id.button_add_medicine);
-        addMedicineButton.setOnClickListener(view -> {
-            // start scan to add medicine
-            checkPermissionAndShowActivity(this);
+        addMedicineButton.setOnClickListener(this::showMenu);
+
+    }private void showMenu(View v) {
+        PopupMenu popup = new PopupMenu(getApplicationContext(), v);
+        popup.getMenuInflater().inflate(R.menu.menu_popup, popup.getMenu());
+
+        MenuItem scanItem = popup.getMenu().findItem(R.id.item_scan).setVisible(true);
+        MenuItem addItem = popup.getMenu().findItem(R.id.item_add).setVisible(true);
+
+        popup.setOnMenuItemClickListener(menuItem -> {
+            if (menuItem.getItemId() == scanItem.getItemId()) {
+                checkPermissionAndShowActivity(this);
+            } else if (menuItem.getItemId() == addItem.getItemId()) {
+                Intent intent = new Intent(getApplicationContext(), AddMedicine.class);
+                intent.putExtra("pharmacy_id", pharmacy.getId());
+                startActivity(intent);
+            }
+            return true;
         });
 
+        popup.show();
     }
 
     private void setupRecyclerView() {
@@ -294,9 +316,7 @@ public class PharmacyInformationPannel extends AppCompatActivity {
         if (contents != null) {
             Intent intent = new Intent(this, AddMedicine.class);
             intent.putExtra("medicine_key", contents);
-            intent.putExtra("pharmacy_name", pharmacy.getName());
-            Log.d("MedicineActivity", "medicine_key: " + contents);
-            Log.d("MedicineActivity", "pharmacy_id: " + pharmacy.getId());
+            intent.putExtra("pharmacy_id", pharmacy.getId());
             startActivity(intent);
         }
     }
@@ -326,6 +346,113 @@ public class PharmacyInformationPannel extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
         String language = prefs.getString("My_Lang", "");
         setLocale(language);
+    }
+
+    private void createNotification(String pharmacy_id, String medicine_id) {
+
+        String userId = new UserLocalStore(this).getLoggedInEmail();
+        dbHandler.addNotification(pharmacy.getId(), medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(PharmacyInformationPannel.this, "Notification created successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(PharmacyInformationPannel.this, "Failed to create notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+        private void removeNotification(String pharmacy_id, String medicine_id) {
+
+            String userId = new UserLocalStore(this).getLoggedInEmail();
+            dbHandler.removeNotification(pharmacy.getId(), medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(PharmacyInformationPannel.this, "Notification removed successfully", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Toast.makeText(PharmacyInformationPannel.this, "Failed to removed notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+    private void purchaseMedicine(String medicine_id, int quantity) {
+        dbHandler.purchaseMedicineFromPharmacy(pharmacy.getId(), medicine_id, quantity,  new FirebaseDBHandler.OnPurchaseMedicineListener() {
+            @Override
+            public void onNotEnoughStock() {
+                Toast.makeText(PharmacyInformationPannel.this, "Not enough stock to purchase medicine", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSuccess() {
+                Toast.makeText(PharmacyInformationPannel.this, "Medicine purchased successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(PharmacyInformationPannel.this, "Failed to purchase medicine: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public void onPurchaseClick(Medicine medicine) {
+        showConfirmDialog(medicine);
+    }
+
+    @Override
+    public void onNotificationToggleClick(Medicine medicine, boolean isActive) {
+        // Logic to handle the notification toggle action
+        if (isActive) {
+            createNotification(pharmacy.getId(), medicine.getId());
+        } else {
+            removeNotification(pharmacy.getId(), medicine.getId());
+        }
+    }
+
+
+    private void showConfirmDialog(Medicine medicine){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_confirm_quantity, null);
+        builder.setView(dialogView);
+
+        TextView medicineName = dialogView.findViewById(R.id.medicineName);
+        TextView pharmacyNameTv = dialogView.findViewById(R.id.pharmacyName);
+
+        Button decreaseButton = dialogView.findViewById(R.id.decreaseButton);
+        Button increaseButton = dialogView.findViewById(R.id.increaseButton);
+        EditText quantityInput = dialogView.findViewById(R.id.quantityInput);
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+
+        medicineName.setText(medicine.getName());
+        pharmacyNameTv.setText(pharmacy.getName());
+
+        decreaseButton.setOnClickListener(v -> {
+            int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
+            if (currentQuantity > 0) {
+                quantityInput.setText(String.valueOf(currentQuantity - 1));
+            }
+        });
+
+        increaseButton.setOnClickListener(v -> {
+            int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
+            quantityInput.setText(String.valueOf(currentQuantity + 1));
+        });
+
+        AlertDialog dialog = builder.create();
+
+        confirmButton.setOnClickListener(v -> {
+            int quantity = Integer.parseInt(quantityInput.getText().toString());
+            purchaseMedicine(medicine.getId(), quantity);
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
 }

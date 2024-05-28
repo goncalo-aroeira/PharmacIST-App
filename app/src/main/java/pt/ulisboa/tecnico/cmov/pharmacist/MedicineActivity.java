@@ -41,6 +41,7 @@ import java.util.Set;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 
 
@@ -122,7 +123,19 @@ public class MedicineActivity extends AppCompatActivity {
 
     private void loadPharmacies() {
         FirebaseDBHandler dbHandler = new FirebaseDBHandler();
-        pharmacies = dbHandler.getPharmacies();
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        dbHandler.loadPharmacies(userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
+                lvPharmacies.setAdapter(pharmacyAdapter);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("MedicineActivity", "Failed to load pharmacies", e);
+            }
+        });
         PharmacyAdapter pharmacyAdapter = new PharmacyAdapter(MedicineActivity.this, pharmacies);
         lvPharmacies.setAdapter(pharmacyAdapter);
     }

@@ -35,6 +35,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 
 public class MedicineInformationPannel extends AppCompatActivity {
@@ -100,7 +101,19 @@ public class MedicineInformationPannel extends AppCompatActivity {
     }
 
     private void fetchAllPharmacies(Medicine medicine) {
-        allPharmacies = dbHandler.getPharmacies();
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        dbHandler.loadPharmacies(userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnPharmaciesLoadedListener() {
+            @Override
+            public void onPharmaciesLoaded(ArrayList<Pharmacy> pharmacies) {
+                allPharmacies = pharmacies;
+                filterPharmaciesWithMedicine(medicine);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("MedicineInformationPannel", "Failed to load pharmacies", e);
+            }
+        });
 
         UserLocalStore user = new UserLocalStore(this);
 

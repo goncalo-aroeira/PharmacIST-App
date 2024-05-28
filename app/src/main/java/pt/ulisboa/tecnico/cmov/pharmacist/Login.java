@@ -19,6 +19,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.database.FirebaseDatabase;
+
+import com.google.firebase.database.FirebaseDatabase;
+
+
 import java.util.Locale;
 import java.util.UUID;
 
@@ -40,6 +45,8 @@ public class Login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         loadLocale();
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

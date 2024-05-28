@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,8 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
     private HashMap<String, Integer> pharmacyInventory;
+    private OnMedicineItemClickListener listener;
+
     private Context context; // Need to pass context for starting an activity
 
     public MedicineAdapter(Context context, List<Medicine> medicines, HashMap<String, Integer> pharmacyInventory) {
@@ -48,6 +51,31 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             intent.putExtra("medicine", med);  // Ensure Medicine class implements Serializable or Parcelable
             context.startActivity(intent);
         });
+
+        // Setting up the button click listeners
+        holder.purchaseButton.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onPurchaseClick(med);
+            }
+        });
+
+        holder.notificationActiveButton.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNotificationToggleClick(med, true);
+            }
+        });
+
+        holder.notificationInactiveButton.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNotificationToggleClick(med, false);
+            }
+        });
+
+    }
+
+    public interface OnMedicineItemClickListener {
+        void onPurchaseClick(Medicine medicine);
+        void onNotificationToggleClick(Medicine medicine, boolean isActive);
     }
 
 
@@ -60,10 +88,16 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         TextView textViewMedicineName;
         TextView textViewMedicineQuantity;
 
+        ImageButton purchaseButton, notificationActiveButton, notificationInactiveButton;
+
+
         public MedicineViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMedicineName = itemView.findViewById(R.id.textViewMedicineName);
             textViewMedicineQuantity = itemView.findViewById(R.id.textViewMedicineQuantity);
+            purchaseButton = itemView.findViewById(R.id.imageButtonPurcharse);
+            notificationActiveButton = itemView.findViewById(R.id.imageButtonNotificationActive);
+            notificationInactiveButton = itemView.findViewById(R.id.imageButtonNotificationInactive);
         }
     }
 }

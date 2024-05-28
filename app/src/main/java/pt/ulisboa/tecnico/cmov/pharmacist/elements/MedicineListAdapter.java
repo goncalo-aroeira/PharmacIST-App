@@ -1,9 +1,12 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +21,12 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
     private Context context;
+
+    private OnMedicineItemClickListener listener;
+
+    public interface OnMedicineItemClickListener {
+        void onMedicineClick(Medicine medicine);
+    }
 
     public MedicineListAdapter(Context context, List<Medicine> medicines) {
         this.context = context;
@@ -35,7 +44,13 @@ public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapte
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine medicine = medicines.get(position);
         holder.textViewMedicineName.setText(medicine.getName());
+
+        holder.itemView.setOnClickListener(v -> {
+            listener.onMedicineClick(medicine);
+        });
+
     }
+
 
     @Override
     public int getItemCount() {
