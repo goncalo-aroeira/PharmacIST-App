@@ -1,11 +1,6 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
-import android.widget.ImageView;
-
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
@@ -44,6 +39,10 @@ public class Pharmacy implements Serializable {
 
     public void generateId() {
         this.id = utils.generateRandomId(5);
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getId() {

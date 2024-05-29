@@ -8,23 +8,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.database.MatrixCursor;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CursorAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupMenu;
-import android.widget.SearchView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -35,7 +27,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -45,16 +36,14 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
-import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyStockAdapter;
 
 
 public class MedicineActivity extends AppCompatActivity {
@@ -63,9 +52,17 @@ public class MedicineActivity extends AppCompatActivity {
     private MaterialButton btnMenu;
 
     // Domain
-    private ArrayList<Pharmacy> pharmacies;
+    private HashMap<Pharmacy, Integer> pharmacies = new HashMap<>();
     private CursorAdapter suggestionAdapter;
     private Set<String> allMedicineNames;
+    private AutoCompleteTextView searchInput;
+    private PharmacyStockAdapter pharmacyAdapter;
+    private ListView pharmacyListView;
+    private FirebaseDBHandler firebaseDBHandler = new FirebaseDBHandler();
+    List<Map.Entry<Pharmacy, Integer>> pharmacyList = new ArrayList<>();
+    HashMap<String, String> medicineNamesAndIdsclass = new HashMap<>();
+
+
 
 
     // Activity Result Launchers
@@ -103,6 +100,14 @@ public class MedicineActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate: Loading Medicine Activity...");
         btnMenu = findViewById(R.id.btnOpenPopupMenu);
         btnMenu.setOnClickListener(this::showMenu);
+
+        searchInput = findViewById(R.id.searchInput);
+        pharmacyListView = findViewById(R.id.pharmacyListView);
+        pharmacyAdapter = new PharmacyStockAdapter(this, pharmacyList);
+        pharmacyListView.setAdapter(pharmacyAdapter);
+
+        setupSearchBar();
+
 
         loadLocale();
 
@@ -190,4 +195,50 @@ public class MedicineActivity extends AppCompatActivity {
         setLocale(language);
     }
 
+
+    private void setupSearchBar() {
+        firebaseDBHandler.getMedicineNames(new FirebaseDBHandler.OnMedicineNamesAndIdsLoaded() {
+            @Override
+            public void onLoaded(HashMap<String, String> medicineNamesAndIds) {
+                medicineNamesAndIdsclass.putAll(medicineNamesAndIds);
+                ArrayList<String> medicineNames = new ArrayList<>(medicineNamesAndIds.keySet());
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(MedicineActivity.this,
+                        android.R.layout.simple_dropdown_item_1line, medicineNames);
+                searchInput.setAdapter(adapter);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(MedicineActivity.this, "Error loading medicine names: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        searchInput.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedMedicine = (String) parent.getItemAtPosition(position);
+            medicineNamesAndIdsclass.get(selectedMedicine);
+            fetchPharmaciesThatStock(medicineNamesAndIdsclass.get(selectedMedicine));
+        });
+    }
+
+    private void fetchPharmaciesThatStock(String medicine) {
+        firebaseDBHandler.getPharmaciesWithMedicine(medicine, new FirebaseDBHandler.OnPharmaciesWithMedicineLoaded() {
+            @Override
+            public void onLoaded(HashMap<Pharmacy, Integer> loadedPharmacies) {
+
+                runOnUiThread(() -> {
+                    pharmacies.clear();
+                    pharmacies.putAll(loadedPharmacies);
+                    pharmacyList.clear();
+                    pharmacyList.addAll(pharmacies.entrySet());
+                    pharmacyAdapter.notifyDataSetChanged();
+                    Log.d(TAG, "Adapter notified of data set changed.");
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(MedicineActivity.this, "Error loading pharmacies: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }

@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -176,9 +175,6 @@ public class FirebaseDBHandler {
                                 newPharmacy.setFlagged(true);
                                 Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is flagged and hidden.");
                             } else {
-                                allPharmacies.add(newPharmacy);
-                            }
-                            else {
                                 allPharmacies.add(newPharmacy);
                             }
                         }
@@ -664,6 +660,131 @@ public class FirebaseDBHandler {
     /* ============================================================================================
                                            SEARCH DYNAMICALLY METHODS
       ============================================================================================= */
+
+    public void getMedicineNames(OnMedicineNamesAndIdsLoaded listener) {
+        DatabaseReference medicinesRef = databaseReference.child("medicine");
+        Query query = medicinesRef.orderByChild("name"); // Assuming 'name' is a field under each medicine entry
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                HashMap<String, String> medicineNamesAndIds = new HashMap<>();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String medicineName = snapshot.child("name").getValue(String.class);
+                    String medicineId = snapshot.getKey(); // Assuming the key of the snapshot is the medicine ID
+                    if (medicineName != null && !medicineNamesAndIds.containsKey(medicineName)) {
+                        medicineNamesAndIds.put(medicineName, medicineId);
+                    }
+                }
+                listener.onLoaded(medicineNamesAndIds);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onError(databaseError.toException());
+            }
+        });
+    }
+
+    // Adjust the listener interface to handle a HashMap of names to IDs
+    public interface OnMedicineNamesAndIdsLoaded {
+        void onLoaded(HashMap<String, String> medicineNamesAndIds);
+        void onError(Exception e);
+    }
+
+
+
+    public interface OnPharmaciesWithMedicineLoaded {
+        void onLoaded(HashMap<Pharmacy, Integer> pharmacies);
+        void onError(Exception e);
+    }
+
+    public void getPharmaciesWithMedicine(String medicineName, OnPharmaciesWithMedicineLoaded listener) {
+        DatabaseReference inventoryRef = databaseReference.child("inventory");
+        DatabaseReference pharmaciesRef = databaseReference.child("pharmacy");
+
+        // Log to start fetching process
+        Log.d(TAG, "Starting to fetch pharmacies that have the medicine: " + medicineName);
+
+        HashMap<String, Integer> pharmacyQuantities = new HashMap<>();
+
+        // Fetching pharmacies that have the specified medicine in their inventory
+        Query query = inventoryRef.orderByChild("medicineId").equalTo(medicineName);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot inventorySnapshot : dataSnapshot.getChildren()) {
+                    String pharmacyId = inventorySnapshot.child("pharmacyId").getValue(String.class);
+                    Integer quantity = inventorySnapshot.child("quantity").getValue(Integer.class);
+
+                    Log.d(TAG, "Pharmacy ID: " + pharmacyId + ", Quantity: " + quantity);
+
+                    if (pharmacyId != null && quantity != null) {
+                        pharmacyQuantities.put(pharmacyId, pharmacyQuantities.getOrDefault(pharmacyId, 0) + quantity);
+                    } else {
+                        Log.d(TAG, "Null value found for pharmacy ID or quantity at inventory: " + inventorySnapshot.getKey());
+                    }
+                }
+
+                Log.d(TAG, "Fetched " + pharmacyQuantities.size() + " pharmacies with their medicine quantities.");
+
+                //Query pharmacyQuery = pharmaciesRef.orderByKey().equalsTo(pharmacyQuantities.keySet();
+                // Now fetching the details of these pharmacies
+                HashMap<Pharmacy, Integer> resultPharmacies = new HashMap<>();
+                final int[] queryCount = {pharmacyQuantities.size()}; // This is the number of asynchronous operations you expect to complete.
+
+                for (String pharmacyId : pharmacyQuantities.keySet()) {
+                    Query pharmacyQuery = pharmaciesRef.orderByKey().equalTo(pharmacyId);
+                    Log.d(TAG, "Fetching pharmacy details for pharmacy ID: " + pharmacyId);
+                    pharmacyQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot pharmaciesSnapshot) {
+                            if (pharmaciesSnapshot.exists()) {
+                                Pharmacy pharmacy = new Pharmacy(
+                                        pharmaciesSnapshot.child(pharmacyId).child("name").getValue(String.class),
+                                        pharmaciesSnapshot.child(pharmacyId).child("address").getValue(String.class)
+                                );
+                                pharmacy.setId(pharmacyId);
+                                resultPharmacies.put(pharmacy, pharmacyQuantities.get(pharmacyId));
+
+                                Log.d(TAG, "Pharmacy ID: " + pharmacy.getId() + ", Name: " + pharmacy.getName() + ", Quantity: " + pharmacyQuantities.get(pharmacyId) + " units");
+                            } else {
+                                Log.d(TAG, "Pharmacy ID not found in the database: " + pharmacyId);
+                            }
+
+                            // Decrement the count and check if it's time to call the final listener
+                            synchronized (this) {
+                                queryCount[0]--;
+                                if (queryCount[0] == 0) {
+                                    Log.d(TAG, "Fetched " + resultPharmacies.size() + " pharmacies with their medicine quantities.");
+                                    listener.onLoaded(resultPharmacies);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Log.e(TAG, "Database error on fetching pharmacy details: " + error.getMessage());
+                            listener.onError(error.toException());
+                            synchronized (this) {
+                                queryCount[0]--;
+                                if (queryCount[0] == 0) {
+                                    listener.onLoaded(resultPharmacies);
+                                }
+                            }
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "Database error on fetching inventory data: " + databaseError.getMessage());
+                listener.onError(databaseError.toException());
+            }
+        });
+    }
 
 
 
