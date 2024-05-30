@@ -72,7 +72,6 @@
         android:layout_height="48dp"
         android:src="@drawable/back_arrow"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="BACK"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -7,24 +7,34 @@
     android:orientation="vertical"
     android:padding="16dp"
     android:layout_marginTop="60dp"
-
     tools:context=".MedicineActivity">
 
-
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:inputType="text"
-        android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
-        android:text="@string/medicine_menu" />
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:src="@drawable/back_arrow" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
+            android:text="@string/medicine_menu" />
+
+    </LinearLayout>
 
     <AutoCompleteTextView
         android:id="@+id/searchInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="SEARCH" />
-
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnOpenPopupMenu"
@@ -34,13 +44,9 @@
         android:layout_margin="10dp"
         android:text="@string/add" />
 
-
     <ListView
         android:id="@+id/pharmacyListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-
-
 </LinearLayout>
-

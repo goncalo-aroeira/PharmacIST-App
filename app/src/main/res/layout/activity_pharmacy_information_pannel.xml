@@ -7,8 +7,19 @@
     android:layout_height="match_parent"
     android:layout_marginTop="60dp"
     android:padding="16dp"
-
     tools:context=".PharmacyInformationPannel">
+
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_back_arrow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/back_button" />
 
     <ImageView
         android:id="@+id/ivPhoto"
@@ -16,18 +27,18 @@
         android:layout_height="146dp"
         android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_pharmacy_name"
+        app:layout_constraintTop_toBottomOf="@id/backButton"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <TextView
         android:id="@+id/textView_pharmacy_name"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="Pharmacy Name Here"
         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ivPhoto"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -42,7 +53,6 @@
         app:layout_constraintBottom_toTopOf="@+id/map"
         app:layout_constraintStart_toEndOf="@+id/ivPhoto" />
 
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMedicines"
         android:layout_width="353dp"
@@ -52,7 +62,6 @@
         android:layout_marginBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
@@ -123,7 +132,4 @@
         android:src="@drawable/ic_favorite_outline"
         app:layout_constraintEnd_toEndOf="@id/imageButton_favorite"
         app:layout_constraintTop_toBottomOf="@id/imageButton_favorite" />
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
