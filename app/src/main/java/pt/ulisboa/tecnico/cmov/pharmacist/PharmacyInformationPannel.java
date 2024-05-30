@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
+import static android.content.ContentValues.TAG;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -9,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -38,6 +41,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
@@ -45,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
@@ -53,7 +60,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
-public class PharmacyInformationPannel extends AppCompatActivity implements MedicineAdapter.OnMedicineItemClickListener{
+public class PharmacyInformationPannel extends AppCompatActivity{
 
     private FirebaseDBHandler dbHandler;
 
@@ -224,6 +231,15 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
     }
 
 
+    private void updateFlagButton(boolean isFlagged, ImageButton button) {
+        if (isFlagged) {
+            button.setImageResource(R.drawable.ic_flag_full);
+        } else {
+            button.setImageResource(R.drawable.ic_flag_outline);
+        }
+    }
+
+
     private void setupAddMedicineButton(Pharmacy pharmacy) {
         Button addMedicineButton = findViewById(R.id.button_add_medicine);
         addMedicineButton.setOnClickListener(this::showMenu);
@@ -250,28 +266,62 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
     }
 
     private void setupRecyclerView() {
+
+        RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
+        recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(PharmacyInformationPannel.this));
+        List<Medicine> medicines = new ArrayList<>();
         dbHandler.getInventoryForPharmacy(pharmacy.getId(), new FirebaseDBHandler.OnGetInventory() {
             @Override
             public void onInventoryLoaded(HashMap<String, Integer> inventory) {
-                RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
-                recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(PharmacyInformationPannel.this));
                 List<String> medicines_id = new ArrayList<>(inventory.keySet());
-                List<Medicine> medicines = new ArrayList<>();
+                Log.d(TAG, "onInventoryLoaded: medicines_id: " + medicines_id);
+                List<Task<Void>> tasks = new ArrayList<>();
                 for (String id : medicines_id) {
+                    TaskCompletionSource<Void> taskCompletionSource = new TaskCompletionSource<>();
+                    tasks.add(taskCompletionSource.getTask());
+
                     dbHandler.getMedicineById(id, new FirebaseDBHandler.OnMedicineLoadedListener() {
                         @Override
                         public void onMedicineLoaded(Medicine medicine) {
+                            Log.d(TAG, "onMedicineLoaded: medicine: " + medicine);
                             medicines.add(medicine);
+                            taskCompletionSource.setResult(null);
                         }
 
                         @Override
                         public void onFailure(Exception e) {
+                            taskCompletionSource.setException(e);
                             Log.e("PharmacyInformationPannel", "Failed to load medicine", e);
                         }
                     });
+
                 }
-                MedicineAdapter adapter = new MedicineAdapter(PharmacyInformationPannel.this, medicines, inventory);
-                recyclerViewMedicines.setAdapter(adapter);
+
+                Tasks.whenAll(tasks).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        MedicineAdapter adapter = new MedicineAdapter(PharmacyInformationPannel.this, medicines, inventory, new MedicineAdapter.OnMedicineItemClickListener() {
+                            @Override
+                            public void onPurchaseClick(Medicine medicine) {
+                                Log.d(TAG, "onPurchaseClick: clicked on purchase button for medicine: " + medicine);
+                                showSellDialog(medicine);
+                            }
+
+                            @Override
+                            public void onNotificationToggleClick(Medicine medicine, boolean isActive) {
+                                // Logic to handle the notification toggle action
+                                if (isActive) {
+                                    createNotification(pharmacy.getId(), medicine.getId());
+                                } else {
+                                    removeNotification(pharmacy.getId(), medicine.getId());
+                                }
+                            }
+                        });
+                        recyclerViewMedicines.setAdapter(adapter);
+                    } else {
+                        Log.e("PharmacyInformationPannel", "Failed to load all medicines");
+                    }
+                });
+
             }
 
             @Override
@@ -392,26 +442,12 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
         });
     }
 
-    @Override
-    public void onPurchaseClick(Medicine medicine) {
-        showConfirmDialog(medicine);
-    }
-
-    @Override
-    public void onNotificationToggleClick(Medicine medicine, boolean isActive) {
-        // Logic to handle the notification toggle action
-        if (isActive) {
-            createNotification(pharmacy.getId(), medicine.getId());
-        } else {
-            removeNotification(pharmacy.getId(), medicine.getId());
-        }
-    }
 
 
-    private void showConfirmDialog(Medicine medicine){
+    private void showSellDialog(Medicine medicine){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_confirm_quantity, null);
+        View dialogView = inflater.inflate(R.layout.dialog_sell_quantity, null);
         builder.setView(dialogView);
 
         TextView medicineName = dialogView.findViewById(R.id.medicineName);
@@ -424,16 +460,23 @@ public class PharmacyInformationPannel extends AppCompatActivity implements Medi
 
         medicineName.setText(medicine.getName());
         pharmacyNameTv.setText(pharmacy.getName());
+        quantityInput.setText("0");
 
+        // SALE
         decreaseButton.setOnClickListener(v -> {
             int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
             if (currentQuantity > 0) {
                 quantityInput.setText(String.valueOf(currentQuantity - 1));
+            } else {
+                decreaseButton.setEnabled(false);
             }
         });
 
         increaseButton.setOnClickListener(v -> {
             int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
+            if (currentQuantity > 0) {
+                decreaseButton.setEnabled(true);
+            }
             quantityInput.setText(String.valueOf(currentQuantity + 1));
         });
 

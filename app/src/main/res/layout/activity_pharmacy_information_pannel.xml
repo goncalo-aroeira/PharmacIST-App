@@ -59,17 +59,18 @@
         android:layout_height="162dp"
         android:layout_marginStart="3dp"
         android:layout_marginEnd="2dp"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.19"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button_add_medicine"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
         android:text="@string/add_medicine"
-        app:layout_constraintBottom_toTopOf="@+id/button_navigate_to_pharmacy"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/materialDivider3" />
 
@@ -77,7 +78,7 @@
         android:id="@+id/materialDivider3"
         android:layout_width="404dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="64dp"
+        android:layout_marginBottom="84dp"
         app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.52"
@@ -87,7 +88,8 @@
         android:id="@+id/textView6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="14dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="24dp"
         android:text="Stock"
         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
         app:layout_constraintBottom_toTopOf="@+id/recyclerViewMedicines"
@@ -97,19 +99,18 @@
         android:id="@+id/button_navigate_to_pharmacy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
         android:text="@string/navigate_to_pharmacy"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/recyclerViewMedicines" />
+        tools:layout_editor_absoluteY="403dp" />
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="380dp"
         android:layout_height="223dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"

@@ -1,9 +1,13 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -11,8 +15,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -21,12 +27,9 @@ public class FirebaseDBHandler {
     private static final String PHARMACIES_NODE = "pharmacy";
     private static final String USER_NODE = "user";
     private static final String FAVORITES_NODE = "favorites";
-
     private static final String INVENTORY_NODE = "inventory";
-
     private static final String NOTIFICATIONS_NODE = "notifications";
     private static final String FLAGGED_NODE = "flagged_pharmacies";
-
     private final String TAG = "FirebaseDBHandler";
 
     private final DatabaseReference databaseReference;
@@ -54,12 +57,14 @@ public class FirebaseDBHandler {
 
     public void getMedicineById(String id, OnMedicineLoadedListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
+        Log.d(TAG, "getMedicineById function: " + id);
+
         Query query = medicinesRef.orderByKey().equalTo(id);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 // print
-                Log.d("FirebaseDBHandler", "Medicine ID: " + id);
+                Log.d(TAG, "onDataChange: Medicine ID: " + id);
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Medicine medicine = new Medicine(
@@ -72,10 +77,9 @@ public class FirebaseDBHandler {
                         medicine.setImageBytes(snapshot.child("imageBytes").getValue(String.class));
                     }
 
-                    Log.d("FirebaseDBHandler", "Medicine: " + medicine.getName());
+                    Log.d(TAG, "Listener Medicine: " + medicine.getName());
                     listener.onMedicineLoaded(medicine);
                 }
-                listener.onFailure(new Exception("Medicine not found"));
             }
 
             @Override
@@ -112,6 +116,7 @@ public class FirebaseDBHandler {
     /* =============================================================================================
                                            PHARMACY METHODS
       ============================================================================================= */
+
     public void addPharmacy(Pharmacy pharmacy, OnChangeListener listener) {
         DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacy.getId());
         pharmacyRef.child("id").setValue(pharmacy.getId());
@@ -384,24 +389,26 @@ public class FirebaseDBHandler {
       ============================================================================================= */
     public void addMedicineToPharmacyInventory(String pharmacyId, String medicineId, int quantity, OnChangeListener listener) {
         DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE).push();
-        inventoryRef.child("pharmacyId").setValue(pharmacyId);
-        inventoryRef.child("medicineId").setValue(medicineId);
-        inventoryRef.child("quantity").setValue(quantity)
-                .addOnSuccessListener(aVoid -> listener.onSuccess())
-                .addOnFailureListener(listener::onFailure);
-    }
-
-    public void removeMedicineFromPharmacyInventory(String pharmacyId, String medicineId, OnChangeListener listener) {
-        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
+        //look for pharmacyId and medicineId
         Query query = inventoryRef.orderByChild("pharmacyId").equalTo(pharmacyId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     if (snapshot.child("medicineId").getValue(String.class).equals(medicineId)) {
-                        snapshot.getRef().removeValue().addOnCompleteListener(task -> listener.onSuccess());
+                        int currentQuantity = snapshot.child("quantity").getValue(Integer.class);
+                        int newQuantity = currentQuantity + quantity;
+                        snapshot.child("quantity").getRef().setValue(newQuantity);
+                        listener.onSuccess();
+                        return;
                     }
                 }
+                // If the medicine is not found in the inventory, add it
+                inventoryRef.child("pharmacyId").setValue(pharmacyId);
+                inventoryRef.child("medicineId").setValue(medicineId);
+                inventoryRef.child("quantity").setValue(quantity)
+                        .addOnSuccessListener(aVoid -> listener.onSuccess())
+                        .addOnFailureListener(listener::onFailure);
             }
 
             @Override
@@ -435,9 +442,9 @@ public class FirebaseDBHandler {
     }
 
     // Get the inventory of a medicine across all pharmacies
-    public void getInventoryForMedicine(String medicineId, OnGetInventory listener) {
+    public void getInventoryForMedicine(Medicine medicine, OnGetInventory listener) {
         DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
-        Query query = inventoryRef.orderByChild("medicineId").equalTo(medicineId);
+        Query query = inventoryRef.orderByChild("medicineId").equalTo(medicine.getId());
         HashMap<String, Integer> inventory = new HashMap<>();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -472,6 +479,8 @@ public class FirebaseDBHandler {
                         }
                         else if (currentQuantity == quantity) {
                             snapshot.getRef().removeValue();
+                            listener.onSuccess();
+
                         } else {
                             int newQuantity = currentQuantity - quantity;
                             snapshot.child("quantity").getRef().setValue(newQuantity);

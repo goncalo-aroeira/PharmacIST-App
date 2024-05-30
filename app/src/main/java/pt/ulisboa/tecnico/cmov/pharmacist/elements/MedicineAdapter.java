@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,10 +26,11 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
 
     private Context context; // Need to pass context for starting an activity
 
-    public MedicineAdapter(Context context, List<Medicine> medicines, HashMap<String, Integer> pharmacyInventory) {
+    public MedicineAdapter(Context context, List<Medicine> medicines, HashMap<String, Integer> pharmacyInventory, OnMedicineItemClickListener listener) {
         this.context = context;
         this.medicines = medicines;
         this.pharmacyInventory = pharmacyInventory;
+        this.listener = listener;
     }
 
     @NonNull
@@ -41,19 +43,20 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
     @Override
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine med = medicines.get(position);
-        Integer quantity = pharmacyInventory.getOrDefault(med.getName(), 0);
+        Integer quantity = pharmacyInventory.getOrDefault(med.getId(), 0);
         holder.textViewMedicineName.setText(med.getName());
         holder.textViewMedicineQuantity.setText("Quantity: " + quantity);
 
         // Setting up the OnClickListener to open MedicineInformationActivity
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, MedicineInformationPannel.class);
-            intent.putExtra("medicine", med);  // Ensure Medicine class implements Serializable or Parcelable
+            intent.putExtra("medicine_id", med.getId());  // Ensure Medicine class implements Serializable or Parcelable
             context.startActivity(intent);
         });
 
         // Setting up the button click listeners
         holder.purchaseButton.setOnClickListener(v -> {
+            Log.d("MedicineAdapter", "onBindViewHolder: Purchase button clicked for " + med.getName() + " with id " + med.getId() + " and quantity " + quantity + " in pharmacy inventory.");
             if (listener != null) {
                 listener.onPurchaseClick(med);
             }

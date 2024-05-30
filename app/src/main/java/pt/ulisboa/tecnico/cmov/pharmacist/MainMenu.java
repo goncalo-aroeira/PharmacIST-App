@@ -2,16 +2,23 @@ package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.Manifest.*;
+
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -19,6 +26,12 @@ import androidx.core.view.WindowInsetsCompat;
 import java.util.Objects;
 import java.util.Locale;
 import android.app.Activity;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.Map;
 
@@ -29,6 +42,9 @@ public class MainMenu extends AppCompatActivity {
     TextView tvWelcome;
 
     UserLocalStore userLocalStore;
+
+    private static final String TAG = "MainMenu";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +59,15 @@ public class MainMenu extends AppCompatActivity {
         });
 
 
+        // Check for permissions and get location
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request permissions
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+            return;
+        }
+
         initializeViewsAndFirebase();
+
     }
 
 

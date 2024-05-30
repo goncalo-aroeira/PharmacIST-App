@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -19,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -37,6 +39,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
 public class MedicineInformationPannel extends AppCompatActivity {
 
@@ -49,6 +52,8 @@ public class MedicineInformationPannel extends AppCompatActivity {
     private LatLng currentUserLocation;
     private static final int LOCATION_REQUEST_CODE = 101;
     private HashMap<String, LatLng> addressCache = new HashMap<>();
+
+    private Medicine medicine;
 
     private FirebaseDBHandler dbHandler;
 
@@ -66,26 +71,37 @@ public class MedicineInformationPannel extends AppCompatActivity {
         // Initialize views
         dbHandler = new FirebaseDBHandler();
         medicineNameTextView = findViewById(R.id.textView_medicine_name);
+        medicinePurposeTextView = findViewById(R.id.textView_medicine_usage);
+        medicineImageView = findViewById(R.id.ivMedicinePhoto);
 
 
         // Retrieve and display medicine data
-        Medicine medicine = (Medicine) getIntent().getSerializableExtra("medicine");
-        if (medicine != null) {
-            medicineNameTextView.setText(medicine.getName());
-        }
+        String medicine_id = (String) getIntent().getStringExtra("medicine_id");
+        dbHandler.getMedicineById(medicine_id, new FirebaseDBHandler.OnMedicineLoadedListener() {
+            @Override
+            public void onMedicineLoaded(Medicine medicine) {
+                MedicineInformationPannel.this.medicine = medicine;
+                medicineNameTextView.setText(medicine.getName());
+                medicinePurposeTextView.setText(medicine.getUsage());
+                Bitmap image = utils.convertCompressedByteArrayToBitmap(medicine.getImageBytes());
+                medicineImageView.setImageBitmap(image);
+                fetchAllPharmacies(medicine);
 
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("MedicineInformationPannel", "Failed to load medicine", e);
+            }
+        });
 
         pharmaciesListView = findViewById(R.id.recyclerViewPharmacies);
-
-        medicine = (Medicine) getIntent().getSerializableExtra("medicine");
-
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         } else {
             getCurrentLocation();
         }
-        fetchAllPharmacies(medicine);
     }
 
     @Override
@@ -141,7 +157,7 @@ public class MedicineInformationPannel extends AppCompatActivity {
             return;
         }
         ArrayList<Pharmacy> filteredPharmacies = new ArrayList<>();
-        dbHandler.getInventoryForMedicine(medicine.getId(), new FirebaseDBHandler.OnGetInventory() {
+        dbHandler.getInventoryForMedicine(medicine, new FirebaseDBHandler.OnGetInventory() {
             @Override
             public void onInventoryLoaded(HashMap<String, Integer> inventory) {
                 for (Pharmacy pharmacy : allPharmacies) {

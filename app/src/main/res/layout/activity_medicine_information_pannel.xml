@@ -61,14 +61,13 @@
         app:layout_constraintStart_toEndOf="@+id/ivMedicinePhoto"
         app:layout_constraintTop_toBottomOf="@+id/textView_medicine_name" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <ListView
         android:id="@+id/recyclerViewPharmacies"
         android:layout_width="346dp"
         android:layout_height="496dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -80,11 +79,11 @@
         android:id="@+id/textView_pharmacies_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:text="Available at:"
         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
         app:layout_constraintBottom_toTopOf="@+id/recyclerViewPharmacies"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/materialDivider3" />
+        app:layout_constraintTop_toBottomOf="@+id/materialDivider3"
+        app:layout_constraintVertical_bias="0.6" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
