@@ -11,10 +11,8 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -51,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
@@ -220,6 +217,10 @@ public class PharmacyInformationPannel extends AppCompatActivity{
             @Override
             public void onAccountSuspended() {
                 Toast.makeText(PharmacyInformationPannel.this, "Your account is suspended due to excessive flagging", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(PharmacyInformationPannel.this, Login.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
             }
 
             @Override

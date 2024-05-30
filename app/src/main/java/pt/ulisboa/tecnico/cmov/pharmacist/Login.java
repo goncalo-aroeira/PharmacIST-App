@@ -19,8 +19,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.firebase.database.FirebaseDatabase;
-
 import java.util.Locale;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
@@ -41,7 +39,7 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        //FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         loadLocale();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
@@ -139,6 +137,10 @@ public class Login extends AppCompatActivity {
 
             @Override
             public void onSuccessfulLogin(User user) {
+                if (user.isSuspended()) {
+                    Toast.makeText(Login.this, "Your account is suspended. Please contact support.", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 Log.d("Login Page", "onSucessfullLogin: User data: " + user.getName() + " " + user.getEmail() + " " + user.getPassword());
                 userLocalStore.saveLoginDetails(user.getId(), user.getName(), user.getEmail(), user.getPassword());
                 Toast.makeText(Login.this, "Login Success", Toast.LENGTH_SHORT).show();

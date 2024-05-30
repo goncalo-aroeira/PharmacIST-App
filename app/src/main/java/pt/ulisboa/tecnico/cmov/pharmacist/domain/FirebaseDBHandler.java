@@ -285,7 +285,8 @@ public class FirebaseDBHandler {
                             userSnapshot.child("id").getValue(String.class),
                             userSnapshot.child("name").getValue(String.class),
                             userSnapshot.child("email").getValue(String.class),
-                            userSnapshot.child("password").getValue(String.class));
+                            userSnapshot.child("password").getValue(String.class),
+                            userSnapshot.child("suspended").getValue(Boolean.class));
                     String password = user.getPassword(); // Get the password
                     // Exit the loop : Wrong password
                     if (password.equals(passwordInput)) {
@@ -622,6 +623,15 @@ public class FirebaseDBHandler {
             if (task.isSuccessful()) {
                 Log.d("Flagging", "Successfully flagged pharmacy: " + pharmacyId);
                 checkAndHandleUserSuspension(userId, listener);
+            } else {
+                Log.e("Flagging", "Failed to flag pharmacy: " + pharmacyId, task.getException());
+                listener.onFailure(task.getException());
+            }
+        });
+
+        pharmacyRef.child("flagged_by").child(userId).setValue(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d("Flagging", "Successfully flagged pharmacy: " + pharmacyId);
                 checkAndHandlePharmacySuspension(pharmacyId, listener);
             } else {
                 Log.e("Flagging", "Failed to flag pharmacy: " + pharmacyId, task.getException());
@@ -670,13 +680,14 @@ public class FirebaseDBHandler {
                 long flagCount = dataSnapshot.getChildrenCount();
                 Log.d("SuspensionCheck", "Pharmacy " + pharmacyId + " flag count: " + flagCount);
 
-                if (flagCount > 3) {  // Assuming suspension if flagged more than 3 times
-                    DatabaseReference pharmacyStatusRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("suspended");
-                    pharmacyStatusRef.setValue(true).addOnSuccessListener(aVoid -> {
-                        Log.d("SuspensionCheck", "Pharmacy " + pharmacyId + " has been suspended.");
+                if (flagCount >= 1) {  // Assuming suspension if flagged more than 3 times
+                    // Delete the pharmacy entirely from the database
+                    DatabaseReference pharmacyToDeleteRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId);
+                    pharmacyToDeleteRef.removeValue().addOnSuccessListener(aVoid -> {
+                        Log.d("SuspensionCheck", "Pharmacy " + pharmacyId + " has been deleted due to suspension.");
                         listener.onPharmacySuspended();
                     }).addOnFailureListener(e -> {
-                        Log.e("SuspensionCheck", "Failed to suspend pharmacy " + pharmacyId, e);
+                        Log.e("SuspensionCheck", "Failed to delete pharmacy " + pharmacyId, e);
                         listener.onFailure(e);
                     });
                 } else {
@@ -691,6 +702,7 @@ public class FirebaseDBHandler {
             }
         });
     }
+
 
 
 

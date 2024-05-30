@@ -7,7 +7,7 @@ import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 public class User {
 
     String name, password, email, id;
-    Boolean isGuest;
+    Boolean isGuest, isSuspended;
     ArrayList<Pharmacy> favoritePharmacy;
     ArrayList<Pharmacy> flaggedPharmacy;
 
@@ -31,6 +31,17 @@ public class User {
         this.favoritePharmacy = new ArrayList<Pharmacy>();
         this.flaggedPharmacy = new ArrayList<Pharmacy>();
         this.isGuest = name.equals("Guest");
+    }
+
+    public User(String id, String name, String email, String password, Boolean isSuspended) {
+        this.id = id;
+        this.name = email;
+        this.email = email;
+        this.password = password;
+        this.favoritePharmacy = new ArrayList<Pharmacy>();
+        this.flaggedPharmacy = new ArrayList<Pharmacy>();
+        this.isGuest = name.equals("Guest");
+        this.isSuspended = isSuspended;
     }
 
     public void generateId() {
@@ -79,5 +90,17 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public Boolean isGuest() {
+        return isGuest;
+    }
+
+    public Boolean isSuspended() {
+        return isSuspended;
+    }
+
+    public void setSuspended(Boolean suspended) {
+        isSuspended = suspended;
     }
 }
