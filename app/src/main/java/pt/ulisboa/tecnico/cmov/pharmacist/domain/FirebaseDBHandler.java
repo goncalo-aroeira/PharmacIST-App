@@ -1,13 +1,9 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -15,10 +11,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -177,7 +171,7 @@ public class FirebaseDBHandler {
                             }
 
                             if (flaggedPharmacies.contains(newPharmacy.getId())) {
-                                newPharmacy.setFlagged(true);
+                                //newPharmacy.setFlagged(true);
                                 Log.d("loadPharmacies", "Pharmacy " + newPharmacy.getName() + " is flagged and hidden.");
                             } else {
                                 allPharmacies.add(newPharmacy);
@@ -315,36 +309,69 @@ public class FirebaseDBHandler {
 
     public void registerUser(User user, OnRegistrationListener listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Log.d("RegisterUser", "Registering user: " + user.getId() + " " + user.getName() + " " + user.getEmail() + " " + user.getPassword());
+
 
         if (user.getId() == null) {
             // Handle null ID (generate new ID, return error, etc.)
+            // Generating new ID for the user
             user.generateId();
+            Log.d("RegisterUser", "Generated new user ID: " + user.getId());
         }
 
+        // Query to check if the email already exists
         Query emailQuery = usersRef.orderByChild("email").equalTo(user.getEmail());
         emailQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
+                    // Email already exists
+                    Log.d("RegisterUser", "Email already exists: " + user.getEmail());
                     listener.onEmailExists();
                 } else {
-                    // Check for username if necessary
-                    Query usernameQuery = usersRef.orderByChild("username").equalTo(user.getName());
+                    // Email does not exist, check for username if necessary
+                    Log.d("RegisterUser", "Email does not exist, proceeding to check username: " + user.getEmail());
+
+                    // Query to check if the username already exists
+                    Query usernameQuery = usersRef.orderByChild("name").equalTo(user.getName());
                     usernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
+                                // Username already exists
+                                Log.d("RegisterUser", "Username already exists: " + user.getName());
                                 listener.onUsernameExists();
                             } else {
                                 // Proceed with registration
-                                usersRef.child(user.getId()).setValue(user)
-                                        .addOnSuccessListener(aVoid -> listener.onRegistrationSuccess())
-                                        .addOnFailureListener(listener::onRegistrationFailure);
+                                Log.d("RegisterUser", "Username does not exist, proceeding with registration: " + user.getName());
+                                DatabaseReference ref = usersRef.child(user.getId());
+                                ref.child("id").setValue(user.getId());
+                                ref.child("name").setValue(user.getName());
+                                ref.child("email").setValue(user.getEmail());
+                                ref.child("password").setValue(user.getPassword());
+                                if (user.getFlaggedPharmacies() != null) {
+                                    ref.child("flagged_pharmacies").setValue(user.getFlaggedPharmacies());
+                                }
+                                if (user.getFavoritesPharmacies() != null) {
+                                    ref.child("favorite_pharmacies").setValue(user.getFavoritesPharmacies());
+                                }
+                                ref.child("suspended").setValue(false).addOnSuccessListener(
+                                                aVoid -> {
+                                                    // User registered successfully
+                                                    Log.d("RegisterUser", "User registered successfully: " + user.getId());
+                                                    listener.onRegistrationSuccess();
+                                                })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("RegisterUser", "Failed to register user: " + user.getId(), e);
+                                            listener.onRegistrationFailure(e);
+                                        });
                             }
                         }
 
                         @Override
                         public void onCancelled(@NonNull DatabaseError databaseError) {
+                            // Username check cancelled due to an error
+                            Log.e("RegisterUser", "Username check cancelled: ", databaseError.toException());
                             listener.onRegistrationFailure(databaseError.toException());
                         }
                     });
@@ -353,10 +380,13 @@ public class FirebaseDBHandler {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Email check cancelled due to an error
+                Log.e("RegisterUser", "Email check cancelled: ", databaseError.toException());
                 listener.onRegistrationFailure(databaseError.toException());
             }
- });
-}
+        });
+    }
+
 
 
     public void upgradeAccount(User user, OnChangeListener listener) {

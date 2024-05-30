@@ -21,15 +21,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.database.FirebaseDatabase;
 
-import com.google.firebase.database.FirebaseDatabase;
-
-
 import java.util.Locale;
-import java.util.UUID;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.User;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
+import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
 public class Login extends AppCompatActivity {
 
@@ -59,13 +56,20 @@ public class Login extends AppCompatActivity {
     }
 
     private void initializeViewsAndFirebase() {
+
+        userLocalStore = new UserLocalStore(this);
+
+        // Check if user is already logged in
+        if (userLocalStore.isUserLoggedIn()) {
+            startActivity(new Intent(Login.this, MainMenu.class));
+        }
+
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnGoToRegister = findViewById(R.id.btnRegister);
         tvLoginAsGuest = findViewById(R.id.tvLoginAsGuest);
         firebaseDBHandler = new FirebaseDBHandler();
-        userLocalStore = new UserLocalStore(this);
         btnChangeLanguage = findViewById(R.id.btnChangeLanguage);
         btnLogin.setOnClickListener(this::onLoginButtonClick);
         btnGoToRegister.setOnClickListener(this::onRegisterButtonClick);
@@ -91,14 +95,13 @@ public class Login extends AppCompatActivity {
         Log.d("LOGIN", "onLoginAsGuestClick: Guest");
 
         String name = "Guest";
-        String email = UUID.randomUUID().toString() + "@guest.com";
+        String email = utils.generateRandomId(10) + "@guest.com";
         String password = name + "_pwd";
 
 
         User guest = new User(name, email, password);
         guest.generateId();
         userLocalStore.saveLoginDetails(guest.getId(), guest.getName(), guest.getEmail(), guest.getPassword());
-
 
         firebaseDBHandler.registerUser(guest, new FirebaseDBHandler.OnRegistrationListener() {
             @Override

@@ -43,9 +43,6 @@ public class UserLocalStore {
         return sharedPreferences.getString(KEY_NAME, "");
     }
 
-    public String getLoggedInPassword() {
-        return sharedPreferences.getString(KEY_PASSWORD, "");
-    }
 
     public boolean isUserLoggedIn() {
         return sharedPreferences.getBoolean(KEY_IS_LOGGEDIN, false);

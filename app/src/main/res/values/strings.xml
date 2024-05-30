@@ -35,4 +35,5 @@
     <string name="edit">Edit</string>
     <string name="add_medicine">Add Medicine</string>
     <string name="navigate_to_pharmacy">Navigate to Pharmacy</string>
+    <string name="back_button">Go Back</string>
 </resources>
