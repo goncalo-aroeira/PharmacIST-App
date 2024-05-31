@@ -74,27 +74,34 @@ public class MedicineInformationPannel extends AppCompatActivity {
         medicinePurposeTextView = findViewById(R.id.textView_medicine_usage);
         medicineImageView = findViewById(R.id.ivMedicinePhoto);
         toggleNotificatioButton = findViewById(R.id.imageButton_notification);
-        toggleNotificatioButton.setOnClickListener(v -> {
-            toggleNotifications(medicine.getId());
-        });
+
 
         // Retrieve and display medicine data
         String medicine_id = (String) getIntent().getStringExtra("medicine_id");
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        String userId = userLocalStore.getLoggedInId();
+
+        toggleNotificatioButton.setOnClickListener(v -> {
+            toggleNotifications(medicine_id);
+            Log.d("MedicineInformationPannel", "onCreate: toggleNotifications: " + medicine_id);
+        });
+
 
         dbHandler.getMedicineById(medicine_id, new FirebaseDBHandler.OnMedicineLoadedListener() {
             @Override
             public void onMedicineLoaded(Medicine medicine) {
                 MedicineInformationPannel.this.medicine = medicine;
 
-                UserLocalStore userLocalStore = new UserLocalStore(MedicineInformationPannel.this);
                 if (userLocalStore.getLoggedInId() != null) {
-                    dbHandler.checkNotificationExists(medicine.getId(), userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnCheckNotificationExists() {
+                    dbHandler.checkNotificationExists(medicine_id, userId, new FirebaseDBHandler.OnCheckNotificationExists() {
                         @Override
                         public void onExists(boolean exists) {
                             if (exists) {
+                                Log.d("Check notification exists", "onExists: Notification exists");
                                 medicine.setHasNotification(true);
                                 toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
                             } else {
+                                Log.d("Check notification exists", "onExists: Notification does not exists");
                                 medicine.setHasNotification(false);
                                 toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
                             }
@@ -298,7 +305,7 @@ public class MedicineInformationPannel extends AppCompatActivity {
 
         String userId = new UserLocalStore(this).getLoggedInId();
 
-        dbHandler.toggleNotification(medicine_id, userId, new FirebaseDBHandler.OnNotificationToggleListener() {
+        dbHandler.toggleNotification(userId, medicine_id, new FirebaseDBHandler.OnNotificationToggleListener() {
 
             @Override
             public void onAddedNotification() {

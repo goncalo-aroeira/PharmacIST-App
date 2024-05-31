@@ -567,8 +567,8 @@ public class FirebaseDBHandler {
     }
 
     public void checkNotificationExists(String medicineId, String userId, OnCheckNotificationExists listener) {
-        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
-        Query query = notificationsRef.orderByChild("medicineId").equalTo(medicineId);
+        DatabaseReference notificationsRef = databaseReference.child(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
+        Query query = notificationsRef.orderByKey().equalTo(medicineId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -631,39 +631,49 @@ public class FirebaseDBHandler {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.d("toggleNotification", "onDataChange triggered.");
                 if (!dataSnapshot.exists()) {
+                    Log.d("toggleNotification", "User does not exist: " + userId);
                     return; // Exit if the user doesn't exist
                 }
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    Log.d("toggleNotification", "Processing user: " + userSnapshot.getKey());
                     if (userSnapshot.child(NOTIFICATIONS_NODE).hasChild(medicineId)) {
-                        userSnapshot.child(FAVORITES_NODE).child(medicineId).getRef().removeValue()
+                        Log.d("toggleNotification", "Notification exists for medicine: " + medicineId);
+                        userSnapshot.child(NOTIFICATIONS_NODE).child(medicineId).getRef().removeValue()
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
+                                        Log.d("toggleNotification", "Notification removed successfully for medicine: " + medicineId);
                                         listener.onRemovedNotification();
                                     } else {
+                                        Log.e("toggleNotification", "Failed to remove notification for medicine: " + medicineId, task.getException());
                                         listener.onFailure(task.getException());
                                     }
                                 });
                     } else {
-                        userSnapshot.child(FAVORITES_NODE).child(medicineId).getRef().setValue(true)
+                        Log.d("toggleNotification", "Notification does not exist for medicine: " + medicineId);
+                        userSnapshot.child(NOTIFICATIONS_NODE).child(medicineId).getRef().setValue(true)
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
+                                        Log.d("toggleNotification", "Notification added successfully for medicine: " + medicineId);
                                         listener.onAddedNotification();
                                     } else {
+                                        Log.e("toggleNotification", "Failed to add notification for medicine: " + medicineId, task.getException());
                                         listener.onFailure(task.getException());
                                     }
                                 });
                     }
-
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("toggleFavoriteStatus", "Database access cancelled.", databaseError.toException());
+                Log.e("toggleNotification", "Database access cancelled.", databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
     }
+
 
     public void getNotificationsForUser(String userId, OnLoadUserNotifications listener) {
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
