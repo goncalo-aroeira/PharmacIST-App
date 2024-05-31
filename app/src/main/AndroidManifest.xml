@@ -34,12 +34,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PharmacIST"
+        android:theme="@style/Theme.PharmacIST.Light"
         tools:targetApi="31">
         <service
             android:name=".services.NotificationService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
 
         <activity
             android:name=".elements.MapPicker"

@@ -38,10 +38,6 @@ public class UserLocalStore {
         sharedPreferences.edit().putBoolean(KEY_IS_LOGGEDIN, false).apply();
     }
 
-    public String getLoggedInEmail() {
-        return sharedPreferences.getString(KEY_EMAIL, "");
-    }
-
     public String getLoggedInName() {
         return sharedPreferences.getString(KEY_NAME, "");
     }
@@ -54,7 +50,7 @@ public class UserLocalStore {
     public String getLoggedInId() {
         return sharedPreferences.getString(KEY_ID, "");
     }
-    ;
+
 
     public boolean isDarkModeEnabled() {
         return sharedPreferences.getBoolean(DARK_MODE, false);

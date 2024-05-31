@@ -113,11 +113,9 @@ public class FirebaseDBHandler {
         pharmacyRef.child("name").setValue(pharmacy.getName());
         pharmacyRef.child("address").setValue(pharmacy.getAddress());
         pharmacyRef.child("imageBytes").setValue(pharmacy.getImageBytes())
-                .addOnSuccessListener(aVoid -> {
-                    listener.onSuccess();
-                })
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
                 .addOnFailureListener(listener::onFailure);
-    };
+    }
 
 
     public void loadPharmacies(String userId, OnPharmaciesLoadedListener listener) {
@@ -279,7 +277,7 @@ public class FirebaseDBHandler {
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     User user = new User(
                             userSnapshot.child("id").getValue(String.class),
-                            userSnapshot.child("name").getValue(String.class),
+                            Objects.requireNonNull(userSnapshot.child("name").getValue(String.class)),
                             userSnapshot.child("email").getValue(String.class),
                             userSnapshot.child("password").getValue(String.class),
                             userSnapshot.child("suspended").getValue(Boolean.class));
@@ -385,32 +383,6 @@ public class FirebaseDBHandler {
     }
 
 
-
-    public void upgradeAccount(User user, OnChangeListener listener) {
-        DatabaseReference usersRef = databaseReference.child(USER_NODE);
-        Query query = usersRef.orderByKey().equalTo(user.getId());
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-                    userSnapshot.child("email").getRef().setValue(user.getEmail());
-                    userSnapshot.child("password").getRef().setValue(user.getPassword());
-                    if (user.getName() != null) {
-                        userSnapshot.child("name").getRef().setValue(user.getName());
-                    } else {
-                        userSnapshot.child("name").getRef().setValue(user.getEmail());
-                    }
-                    listener.onSuccess();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-
-    }
     /* =============================================================================================
                                            INVENTORY METHODS
       ============================================================================================= */
@@ -422,7 +394,7 @@ public class FirebaseDBHandler {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId)) {
+                    if (Objects.equals(snapshot.child("medicineId").getValue(String.class), medicineId)) {
                         int currentQuantity = snapshot.child("quantity").getValue(Integer.class);
                         int newQuantity = currentQuantity + quantity;
                         snapshot.child("quantity").getRef().setValue(newQuantity);
@@ -699,7 +671,7 @@ public class FirebaseDBHandler {
         // Fetch user data for notifications and favorites
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Map<String, Boolean> notifications = (Map<String, Boolean>) dataSnapshot.child(NOTIFICATIONS_NODE).getValue();
                 Map<String, Boolean> favoritePharmacies = (Map<String, Boolean>) dataSnapshot.child(FAVORITES_NODE).getValue();
 
@@ -714,7 +686,7 @@ public class FirebaseDBHandler {
                         Query inventoryQuery = inventoryRef.orderByChild("medicineId").equalTo(medicineId);
                         inventoryQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
-                            public void onDataChange(DataSnapshot inventorySnapshot) {
+                            public void onDataChange(@NonNull DataSnapshot inventorySnapshot) {
                                 for (DataSnapshot snapshot : inventorySnapshot.getChildren()) {
                                     String inventoryPharmacyId = snapshot.child("pharmacyId").getValue(String.class);
                                     if (pharmacyId.equals(inventoryPharmacyId)) {
@@ -748,7 +720,7 @@ public class FirebaseDBHandler {
                             }
 
                             @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
                                 listener.onFailure(databaseError.toException());
                             }
                         });
@@ -757,7 +729,7 @@ public class FirebaseDBHandler {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 listener.onFailure(databaseError.toException());
             }
         });
@@ -783,7 +755,7 @@ public class FirebaseDBHandler {
 
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 HashMap<String, String> medicineNamesAndIds = new HashMap<>();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String medicineName = snapshot.child("name").getValue(String.class);
@@ -796,7 +768,7 @@ public class FirebaseDBHandler {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 listener.onError(databaseError.toException());
             }
         });
@@ -827,7 +799,7 @@ public class FirebaseDBHandler {
         Query query = inventoryRef.orderByChild("medicineId").equalTo(medicineName);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot inventorySnapshot : dataSnapshot.getChildren()) {
                     String pharmacyId = inventorySnapshot.child("pharmacyId").getValue(String.class);
                     Integer quantity = inventorySnapshot.child("quantity").getValue(Integer.class);
@@ -853,7 +825,7 @@ public class FirebaseDBHandler {
                     Log.d(TAG, "Fetching pharmacy details for pharmacy ID: " + pharmacyId);
                     pharmacyQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
-                        public void onDataChange(DataSnapshot pharmaciesSnapshot) {
+                        public void onDataChange(@NonNull DataSnapshot pharmaciesSnapshot) {
                             if (pharmaciesSnapshot.exists()) {
                                 Pharmacy pharmacy = new Pharmacy(
                                         pharmaciesSnapshot.child(pharmacyId).child("name").getValue(String.class),
@@ -894,7 +866,7 @@ public class FirebaseDBHandler {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e(TAG, "Database error on fetching inventory data: " + databaseError.getMessage());
                 listener.onError(databaseError.toException());
             }

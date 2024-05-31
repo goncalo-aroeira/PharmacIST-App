@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,8 +19,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -41,17 +37,17 @@ import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineListAdapter;
 public class AddMedicine extends AppCompatActivity implements MedicineListAdapter.onMedicineClicked {
 
     private EditText searchMedicine;
-    private RecyclerView medicineList;
     private MedicineListAdapter adapter;
-    private List<Medicine> allMedicines = new ArrayList<>();
+    private final List<Medicine> allMedicines = new ArrayList<>();
     private FirebaseDBHandler firebaseDBHandler;
     private Pharmacy pharmacy;
 
     private final ActivityResultLauncher<String> notificationRequestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    // FCM SDK (and your app) can post notifications.
+                    Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
                 } else {
+                    Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -111,7 +107,7 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
 
     private void setupViews() {
         searchMedicine = findViewById(R.id.searchMedicine);
-        medicineList = findViewById(R.id.medicineList);
+        RecyclerView medicineList = findViewById(R.id.medicineList);
         medicineList.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MedicineListAdapter(this, allMedicines, this);
         medicineList.setAdapter(adapter);
@@ -242,16 +238,6 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
         setLocale(language);
     }
 
-    private void askNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
-
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                notificationRequestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
-            }
-        }
-    }
 
     @Override
     public void onMedicineSelected(Medicine medicine) {

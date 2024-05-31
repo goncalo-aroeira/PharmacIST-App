@@ -19,6 +19,7 @@
         android:layout_centerInParent="true"
         android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
+        android:contentDescription="Light/Dark Mode"
         app:layout_constraintTop_toBottomOf="@+id/materialDivider" />
 
     <com.google.android.material.divider.MaterialDivider
@@ -37,7 +38,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="13dp"
-        android:text="User"
+        android:text="@string/user"
         app:layout_constraintBottom_toBottomOf="@+id/materialDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.09"
@@ -54,6 +55,7 @@
         app:layout_constraintStart_toStartOf="@+id/materialDivider"
         app:layout_constraintTop_toTopOf="@+id/materialDivider"
         app:layout_constraintVertical_bias="0.509"
+        android:contentDescription="profile image"
         app:srcCompat="@drawable/profile" />
 
     <Button
@@ -127,7 +129,7 @@
         android:layout_width="100dp"
         android:layout_height="40dp"
         android:text="@string/change_language"
-        android:textSize="8sp"
+        android:textSize="11sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

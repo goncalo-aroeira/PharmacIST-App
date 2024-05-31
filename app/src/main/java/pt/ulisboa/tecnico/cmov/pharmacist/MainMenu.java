@@ -34,8 +34,6 @@ public class MainMenu extends AppCompatActivity {
 
     UserLocalStore userLocalStore;
 
-    private static final String TAG = "MainMenu";
-
     private boolean isDarkModeEnabled = false;
 
 
@@ -78,20 +76,17 @@ public class MainMenu extends AppCompatActivity {
         } else {
             toggleModeBtn.setImageResource(R.drawable.ic_night);
         }
-        toggleModeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Toggle the app theme and save the user's preference
-                isDarkModeEnabled = !isDarkModeEnabled;
-                userLocalStore.setDarkMode(isDarkModeEnabled);
+        toggleModeBtn.setOnClickListener(v -> {
+            // Toggle the app theme and save the user's preference
+            isDarkModeEnabled = !isDarkModeEnabled;
+            userLocalStore.setDarkMode(isDarkModeEnabled);
 
-                if (isDarkModeEnabled) {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                } else {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                }
-                recreate(); // Restart activity to apply theme changes
+            if (isDarkModeEnabled) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
+            recreate(); // Restart activity to apply theme changes
         });
 
         initializeViewsAndFirebase();
@@ -116,9 +111,7 @@ public class MainMenu extends AppCompatActivity {
         btnPharmacy.setOnClickListener(v -> startActivity(new Intent(MainMenu.this, PharmaciesMenu.class)));
         btnMap.setOnClickListener(v -> startActivity(new Intent(MainMenu.this, Map.class)));
 
-        btnChangeLanguage.setOnClickListener(v -> {
-            showChangeLanguageDialog();
-        });
+        btnChangeLanguage.setOnClickListener(v -> showChangeLanguageDialog());
         if (Objects.equals(userLocalStore.getLoggedInName(), "Guest")){
             btnUpgradeAccount.setVisibility(View.VISIBLE);
             btnUpgradeAccount.setOnClickListener(v -> {
