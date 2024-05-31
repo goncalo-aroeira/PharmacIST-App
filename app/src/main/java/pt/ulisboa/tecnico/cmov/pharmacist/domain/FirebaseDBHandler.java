@@ -951,9 +951,6 @@ public class FirebaseDBHandler {
         void onRemovedNotification();
     }
 
-    public interface OnLoadUserNotifications extends FirebaseDBHandlerListener {
-        void onLoaded(ArrayList<String> medicine_ids);
-    }
 
     public interface OnCheckNotificationExists extends FirebaseDBHandlerListener {
         void onExists(boolean exists);

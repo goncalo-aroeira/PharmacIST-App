@@ -37,4 +37,7 @@
     <string name="add_medicine">Adicionar Medicamento</string>
     <string name="navigate_to_pharmacy">Navegar para Farmácia</string>
     <string name="back_button">Voltar</string>
+    <string name="user">Utilizador</string>
+    <string name="light_dark_mode">Modo diurno/noturno</string>
+    <string name="profile_image">Imagem de perfil</string>
 </resources>

@@ -37,4 +37,6 @@
     <string name="navigate_to_pharmacy">Navigate to Pharmacy</string>
     <string name="back_button">Go Back</string>
     <string name="user">User</string>
+    <string name="light_dark_mode">Light/Dark Mode</string>
+    <string name="profile_image">Profile Image</string>
 </resources>

@@ -16,8 +16,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -41,15 +39,6 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
     private final List<Medicine> allMedicines = new ArrayList<>();
     private FirebaseDBHandler firebaseDBHandler;
     private Pharmacy pharmacy;
-
-    private final ActivityResultLauncher<String> notificationRequestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
-                }
-            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +111,6 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
             public void onMedicinesLoaded(ArrayList<Medicine> medicines) {
                 allMedicines.clear();
                 allMedicines.addAll(medicines);
-                adapter.notifyDataSetChanged(); // Ensure adapter is updated on data load
             }
 
             @Override
