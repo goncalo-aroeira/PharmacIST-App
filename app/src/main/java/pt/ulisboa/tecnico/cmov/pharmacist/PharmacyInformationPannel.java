@@ -28,6 +28,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -100,6 +101,12 @@ public class PharmacyInformationPannel extends AppCompatActivity{
 
         Intent intent = getIntent();
         if (intent != null) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // return to previous activity
+                Toast.makeText(this, "Location permission is required to view pharmacy information", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
             dbHandler = new FirebaseDBHandler();
 
             pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");

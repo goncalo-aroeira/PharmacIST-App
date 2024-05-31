@@ -20,6 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.R;
@@ -677,6 +678,62 @@ public class FirebaseDBHandler {
                 listener.onFailure(databaseError.toException());
             }
         });
+    }
+
+
+    public void checkNotifications(String userId, OnNotificationCheckListener listener) {
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
+        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
+
+        // Fetch user data for notifications and favorites
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Boolean> notifications = (Map<String, Boolean>) dataSnapshot.child(NOTIFICATIONS_NODE).getValue();
+                Map<String, Boolean> favoritePharmacies = (Map<String, Boolean>) dataSnapshot.child(FAVORITES_NODE).getValue();
+
+                if (notifications == null || favoritePharmacies == null) {
+                    listener.onFailure(new Exception("No notifications or favorite pharmacies set"));
+                    return;
+                }
+
+                // Convert favorite pharmacies to a list of IDs
+                ArrayList<String> pharmacyIds = new ArrayList<>(favoritePharmacies.keySet());
+
+                // Check inventory for each medicine the user wants notifications about
+                for (String medicineId : notifications.keySet()) {
+                    for (String pharmacyId : pharmacyIds) {
+                        inventoryRef.orderByChild("medicineId").equalTo(medicineId)
+                                .get().addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        for (DataSnapshot inventorySnapshot : task.getResult().getChildren()) {
+                                            String inventoryPharmacyId = inventorySnapshot.child("pharmacyId").getValue(String.class);
+                                            if (pharmacyId.equals(inventoryPharmacyId)) {
+                                                int quantity = inventorySnapshot.child("quantity").getValue(Integer.class);
+                                                if (quantity > 0) {
+                                                    // Notify listener about available medicine
+                                                    listener.onNotificationAvailable(medicineId, pharmacyId, quantity);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        listener.onFailure(task.getException());
+                                    }
+                                });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+    public interface OnNotificationCheckListener {
+        void onNotificationAvailable(String medicineId, String pharmacyId, int quantity);
+        void onFailure(Exception exception);
     }
 
 
