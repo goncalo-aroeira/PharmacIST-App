@@ -16,6 +16,8 @@ public class UserLocalStore {
 
     private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
 
+    private static final String DARK_MODE = "darkMode";
+
     SharedPreferences sharedPreferences;
 
     public UserLocalStore(@NonNull Context context) {
@@ -28,6 +30,7 @@ public class UserLocalStore {
         sharedPreferences.edit().putString(KEY_EMAIL, email).apply();
         sharedPreferences.edit().putString(KEY_PASSWORD, password).apply();
         sharedPreferences.edit().putBoolean(KEY_IS_LOGGEDIN, true).apply();
+        sharedPreferences.edit().putBoolean(DARK_MODE, false).apply();
     }
 
     public void clearLoginDetails() {
@@ -52,5 +55,13 @@ public class UserLocalStore {
         return sharedPreferences.getString(KEY_ID, "");
     }
     ;
+
+    public boolean isDarkModeEnabled() {
+        return sharedPreferences.getBoolean(DARK_MODE, false);
+    }
+
+    public void setDarkMode(boolean darkMode) {
+        sharedPreferences.edit().putBoolean(DARK_MODE, darkMode).apply();
+    }
 
 }

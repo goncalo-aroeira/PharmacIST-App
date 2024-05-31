@@ -52,7 +52,6 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
                 if (isGranted) {
                     // FCM SDK (and your app) can post notifications.
                 } else {
-                    // TODO: Inform user that that your app will not show notifications.
                 }
             });
 
@@ -216,17 +215,7 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
             @Override
             public void onSuccess() {
                 Toast.makeText(AddMedicine.this, "Medicine added to inventory", Toast.LENGTH_SHORT).show();
-                firebaseDBHandler.checkAndNotifyUser(AddMedicine.this, pharmacy.getId(), medicine.getId(), new FirebaseDBHandler.OnChangeListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(AddMedicine.this, "User notified", Toast.LENGTH_SHORT).show();
-                    }
 
-                    @Override
-                    public void onFailure(Exception e) {
-                        Toast.makeText(AddMedicine.this, "Failed to notify user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
 
             @Override

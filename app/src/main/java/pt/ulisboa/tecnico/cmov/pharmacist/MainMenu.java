@@ -8,11 +8,13 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -34,6 +36,7 @@ public class MainMenu extends AppCompatActivity {
 
     private static final String TAG = "MainMenu";
 
+    private boolean isDarkModeEnabled = false;
 
 
     @Override
@@ -56,8 +59,42 @@ public class MainMenu extends AppCompatActivity {
             return;
         }
 
-        initializeViewsAndFirebase();
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        isDarkModeEnabled = userLocalStore.isDarkModeEnabled();
 
+
+        if (isDarkModeEnabled) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
+        ImageButton toggleModeBtn = findViewById(R.id.toggleModeBtn);
+
+        if (isDarkModeEnabled) {
+            // change image
+            toggleModeBtn.setImageResource(R.drawable.ic_light);
+
+        } else {
+            toggleModeBtn.setImageResource(R.drawable.ic_night);
+        }
+        toggleModeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Toggle the app theme and save the user's preference
+                isDarkModeEnabled = !isDarkModeEnabled;
+                userLocalStore.setDarkMode(isDarkModeEnabled);
+
+                if (isDarkModeEnabled) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                }
+                recreate(); // Restart activity to apply theme changes
+            }
+        });
+
+        initializeViewsAndFirebase();
 
     }
 

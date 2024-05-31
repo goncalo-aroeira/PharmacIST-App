@@ -12,6 +12,15 @@
     tools:layout_editor_absoluteY="1dp">
 
 
+    <ImageButton
+        android:id="@+id/toggleModeBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/materialDivider" />
+
     <com.google.android.material.divider.MaterialDivider
         android:id="@+id/materialDivider"
         style="@style/Widget.MaterialComponents.MaterialDivider"

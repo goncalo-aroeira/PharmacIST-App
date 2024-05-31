@@ -1,15 +1,8 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
-import static androidx.core.content.ContextCompat.getSystemService;
-
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,9 +13,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-
-import pt.ulisboa.tecnico.cmov.pharmacist.R;
 
 
 public class FirebaseDBHandler {
@@ -536,30 +528,6 @@ public class FirebaseDBHandler {
                                                 NOTIFICATIONS
       ============================================================================================= */
 
-    public void checkAndNotifyUser(Context context, String pharmacyId, String medicineId, OnChangeListener listener) {
-        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference(NOTIFICATIONS_NODE);
-
-        // look for combination of pharmacyId and medicineId
-
-
-        Query query = notificationsRef.orderByChild("pharmacyId").equalTo(pharmacyId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId)) {
-                        sendNotification(context, pharmacyId, medicineId, snapshot.child("userId").getValue(String.class));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-
-    }
 
     public void checkNotificationExists(String medicineId, String userId, OnCheckNotificationExists listener) {
         DatabaseReference notificationsRef = databaseReference.child(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
@@ -575,48 +543,6 @@ public class FirebaseDBHandler {
                 listener.onFailure(databaseError.toException());
             }
         });
-    }
-
-
-    private void sendNotification(Context context, String pharmacyId, String medicineId, String userId) {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(context, NotificationManager.class);
-        String channelId = "inventory_change_channel";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "Inventory Changes", NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        getMedicineById(medicineId, new OnMedicineLoadedListener() {
-            @Override
-            public void onMedicineLoaded(Medicine medicine) {
-                getPharmacyById(pharmacyId, new OnPharmacyLoadedListener() {
-                    @Override
-                    public void onPharmacyLoaded(Pharmacy pharmacy) {
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-                                .setSmallIcon(R.drawable.ic_notifications)
-                                .setContentTitle("Inventory Update")
-                                .setContentText("The inventory of " + medicine.getName() +
-                                        " in pharmacy " + pharmacy.getName() +
-                                        " has changed.")
-                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-                        notificationManager.notify(1, builder.build());
-                    }
-
-                    @Override
-                    public void onFailure(Exception e) {
-                        Log.e("sendNotification", "Failed to get pharmacy by ID", e);
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("sendNotification", "Failed to get medicine by ID", e);
-            }
-        });
-
-
     }
 
     public void toggleNotification(String userId, String medicineId, OnNotificationToggleListener listener) {
@@ -766,6 +692,83 @@ public class FirebaseDBHandler {
     }
 
 
+    public void checkNotifications(String userId, OnNotificationCheckListener listener) {
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
+        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
+
+        // Fetch user data for notifications and favorites
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Boolean> notifications = (Map<String, Boolean>) dataSnapshot.child(NOTIFICATIONS_NODE).getValue();
+                Map<String, Boolean> favoritePharmacies = (Map<String, Boolean>) dataSnapshot.child(FAVORITES_NODE).getValue();
+
+                if (notifications == null || favoritePharmacies == null) {
+                    listener.onFailure(new Exception("No notifications or favorite pharmacies set"));
+                    return;
+                }
+
+                // Check inventory for each medicine the user wants notifications about
+                for (String medicineId : notifications.keySet()) {
+                    for (String pharmacyId : favoritePharmacies.keySet()) {
+                        Query inventoryQuery = inventoryRef.orderByChild("medicineId").equalTo(medicineId);
+                        inventoryQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot inventorySnapshot) {
+                                for (DataSnapshot snapshot : inventorySnapshot.getChildren()) {
+                                    String inventoryPharmacyId = snapshot.child("pharmacyId").getValue(String.class);
+                                    if (pharmacyId.equals(inventoryPharmacyId)) {
+                                        int quantity = snapshot.child("quantity").getValue(Integer.class);
+                                        if (quantity > 0) {
+                                            // Fetch pharmacy and medicine details
+                                            getPharmacyById(pharmacyId, new OnPharmacyLoadedListener() {
+                                                @Override
+                                                public void onPharmacyLoaded(Pharmacy pharmacy) {
+                                                    getMedicineById(medicineId, new OnMedicineLoadedListener() {
+                                                        @Override
+                                                        public void onMedicineLoaded(Medicine medicine) {
+                                                            listener.onNotificationAvailable(medicine.getName(), pharmacy.getName(), quantity);
+                                                        }
+
+                                                        @Override
+                                                        public void onFailure(Exception e) {
+                                                            listener.onFailure(e);
+                                                        }
+                                                    });
+                                                }
+
+                                                @Override
+                                                public void onFailure(Exception e) {
+                                                    listener.onFailure(e);
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                listener.onFailure(databaseError.toException());
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+
+    public interface OnNotificationCheckListener {
+        void onNotificationAvailable(String medicineName, String pharmacyName, int quantity);
+
+        void onFailure(Exception exception);
+    }
 
 
 
