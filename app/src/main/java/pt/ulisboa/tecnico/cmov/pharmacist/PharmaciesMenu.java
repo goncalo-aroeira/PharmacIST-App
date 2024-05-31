@@ -122,9 +122,7 @@ public class PharmaciesMenu extends AppCompatActivity {
         lvPharmacies.setOnItemClickListener((parent, view, position, id) -> {
             Pharmacy pharmacy = pharmacies.get(position);
             Intent intent = new Intent(PharmaciesMenu.this, PharmacyInformationPannel.class);
-            intent.putExtra("pharmacy", pharmacy);
-            LatLng location = geocodeAddress(pharmacy.getAddress());
-            intent.putExtra("pharmacy_location", location);
+            intent.putExtra("pharmacy_id", pharmacy.getId());
             startActivity(intent);
         });
 

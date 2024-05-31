@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,6 +48,7 @@ import com.google.android.gms.tasks.Tasks;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +65,8 @@ public class PharmacyInformationPannel extends AppCompatActivity{
 
     private FirebaseDBHandler dbHandler;
 
-    private Pharmacy pharmacy;
+    private String pharmacyId;
+    private String pharmacyName;
 
     private final ActivityResultLauncher<ScanOptions> qrCodeScannerLauncher =
             registerForActivityResult(new ScanContract(), result -> {
@@ -100,6 +104,9 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         });
 
         Intent intent = getIntent();
+        pharmacyId = (String) intent.getStringExtra("pharmacy_id");
+        Log.d("PharmacyInformationPannel", "Pharmacy ID: " + pharmacyId);
+
         if (intent != null) {
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // return to previous activity
@@ -109,19 +116,28 @@ public class PharmacyInformationPannel extends AppCompatActivity{
 
             dbHandler = new FirebaseDBHandler();
 
-            pharmacy = (Pharmacy) intent.getSerializableExtra("pharmacy");
-            LatLng pharmacyLocation = intent.getParcelableExtra("pharmacy_location");
+            dbHandler.getPharmacyById(pharmacyId, new FirebaseDBHandler.OnPharmacyLoadedListener() {
+                @Override
+                public void onPharmacyLoaded(Pharmacy pharmacy) {
+                    if (pharmacy == null) {
+                        Toast.makeText(PharmacyInformationPannel.this, "Failed to load pharmacy information", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
+                    pharmacyName = pharmacy.getName();
+                    LatLng pharmacyLocation = geocodeAddress(pharmacy.getAddress());
+                    populateDetailView(pharmacy);
+                    setupMap(pharmacyLocation, pharmacy.getName());
+                    setupButtons(pharmacy, pharmacyLocation);
+                    setupRecyclerView();
+                }
 
-            if (pharmacy == null || pharmacyLocation == null) {
-                Toast.makeText(this, "Failed to load pharmacy information", Toast.LENGTH_SHORT).show();
-                finish();
-                return;
-            }
-
-            populateDetailView(pharmacy);
-            setupMap(pharmacyLocation, pharmacy.getName());
-            setupButtons(pharmacy, pharmacyLocation);
-            setupRecyclerView();
+                @Override
+                public void onFailure(Exception e) {
+                    Toast.makeText(PharmacyInformationPannel.this, "Failed to load pharmacy information", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
         }
     }
 
@@ -257,7 +273,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 checkPermissionAndShowActivity(this);
             } else if (menuItem.getItemId() == addItem.getItemId()) {
                 Intent intent = new Intent(getApplicationContext(), AddMedicine.class);
-                intent.putExtra("pharmacy_id", pharmacy.getId());
+                intent.putExtra("pharmacy_id", pharmacyId);
                 startActivity(intent);
             }
             return true;
@@ -271,7 +287,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         RecyclerView recyclerViewMedicines = findViewById(R.id.recyclerViewMedicines);
         recyclerViewMedicines.setLayoutManager(new LinearLayoutManager(PharmacyInformationPannel.this));
         List<Medicine> medicines = new ArrayList<>();
-        dbHandler.getInventoryForPharmacy(pharmacy.getId(), new FirebaseDBHandler.OnGetInventory() {
+        dbHandler.getInventoryForPharmacy(pharmacyId, new FirebaseDBHandler.OnGetInventory() {
             @Override
             public void onInventoryLoaded(HashMap<String, Integer> inventory) {
                 List<String> medicines_id = new ArrayList<>(inventory.keySet());
@@ -360,7 +376,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         if (contents != null) {
             Intent intent = new Intent(this, AddMedicine.class);
             intent.putExtra("medicine_key", contents);
-            intent.putExtra("pharmacy_id", pharmacy.getId());
+            intent.putExtra("pharmacy_id", pharmacyId);
             startActivity(intent);
         }
     }
@@ -395,7 +411,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
 
 
     private void purchaseMedicine(String medicine_id, int quantity) {
-        dbHandler.purchaseMedicineFromPharmacy(pharmacy.getId(), medicine_id, quantity,  new FirebaseDBHandler.OnPurchaseMedicineListener() {
+        dbHandler.purchaseMedicineFromPharmacy(pharmacyId, medicine_id, quantity,  new FirebaseDBHandler.OnPurchaseMedicineListener() {
             @Override
             public void onNotEnoughStock() {
                 Toast.makeText(PharmacyInformationPannel.this, "Not enough stock to purchase medicine", Toast.LENGTH_SHORT).show();
@@ -430,7 +446,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         Button confirmButton = dialogView.findViewById(R.id.confirmButton);
 
         medicineName.setText(medicine.getName());
-        pharmacyNameTv.setText(pharmacy.getName());
+        pharmacyNameTv.setText(pharmacyName);
         quantityInput.setText("0");
 
         // SALE
@@ -460,6 +476,23 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         });
 
         dialog.show();
+    }
+
+    private LatLng geocodeAddress(String address) {
+        Log.d("PharmacyInformationPannel", "Geocoding address: " + address);
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addresses;
+        try {
+            addresses = geocoder.getFromLocationName(address, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                double latitude = addresses.get(0).getLatitude();
+                double longitude = addresses.get(0).getLongitude();
+                return new LatLng(latitude, longitude);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

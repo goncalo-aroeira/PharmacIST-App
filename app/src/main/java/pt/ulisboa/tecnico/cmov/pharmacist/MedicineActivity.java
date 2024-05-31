@@ -58,9 +58,6 @@ public class MedicineActivity extends AppCompatActivity {
     List<Map.Entry<Pharmacy, Integer>> pharmacyList = new ArrayList<>();
     HashMap<String, String> medicineNamesAndIdsclass = new HashMap<>();
 
-
-
-
     // Activity Result Launchers
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -104,11 +101,15 @@ public class MedicineActivity extends AppCompatActivity {
 
         setupSearchBar();
 
+        // Set item click listener for the ListView
+        pharmacyListView.setOnItemClickListener((parent, view, position, id) -> {
+            Map.Entry<Pharmacy, Integer> entry = pharmacyList.get(position);
+            Pharmacy selectedPharmacy = entry.getKey();
+            navigateToPharmacyInformationPanel(selectedPharmacy.getId());
+        });
 
         loadLocale();
-
     }
-
 
     private void showMenu(View v) {
         PopupMenu popup = new PopupMenu(getApplicationContext(), v);
@@ -188,7 +189,6 @@ public class MedicineActivity extends AppCompatActivity {
         setLocale(language);
     }
 
-
     private void setupSearchBar() {
         firebaseDBHandler.getMedicineNames(new FirebaseDBHandler.OnMedicineNamesAndIdsLoaded() {
             @Override
@@ -233,5 +233,11 @@ public class MedicineActivity extends AppCompatActivity {
                 Toast.makeText(MedicineActivity.this, "Error loading pharmacies: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void navigateToPharmacyInformationPanel(String pharmacyId) {
+        Intent intent = new Intent(MedicineActivity.this, PharmacyInformationPannel.class);
+        intent.putExtra("pharmacy_id", pharmacyId);
+        startActivity(intent);
     }
 }

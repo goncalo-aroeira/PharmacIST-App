@@ -165,10 +165,9 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
 
                     // Launch detail activity or fragment and pass data
                     Intent intent = new Intent(Map.this, PharmacyInformationPannel.class);
-                    intent.putExtra(("pharmacy"), clickedPharmacy);
+                    intent.putExtra(("pharmacy_id"), clickedPharmacy.getId());
+                    Log.d("Map", "Pharmacy clicked: " +  " with id: " + clickedPharmacy.getId());
 
-                    LatLng location = geocodeAddress(clickedPharmacy.getAddress());
-                    intent.putExtra("pharmacy_location", location);
                     // Add more data as needed
                     startActivity(intent);
 
