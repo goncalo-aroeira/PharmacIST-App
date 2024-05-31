@@ -111,6 +111,9 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 return;
             }
 
+            Log.d("PharmacyInformationPannel", "IS FAVORITE: " + pharmacy.isFavorite());
+
+
             populateDetailView(pharmacy);
             setupMap(pharmacyLocation, pharmacy.getName());
             setupButtons(pharmacy, pharmacyLocation);
@@ -168,16 +171,15 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         ImageButton addToFavoritesButton;
         addToFavoritesButton = findViewById(R.id.imageButton_favorite);
         if (pharmacy.isFavorite()) {
-                addToFavoritesButton.setImageResource(R.drawable.ic_favorite_full);
-
+            addToFavoritesButton.setImageResource(R.drawable.ic_favorite_full);
         } else {
-                addToFavoritesButton.setImageResource(R.drawable.ic_favorite_outline);
+            addToFavoritesButton.setImageResource(R.drawable.ic_favorite_outline);
         }
         addToFavoritesButton.setOnClickListener(view -> {
             Log.d("PharmacyInformationPannel", "Add to favorites button clicked");
             UserLocalStore userLocalStore = new UserLocalStore(this);
             String userId = userLocalStore.getLoggedInId();
-            dbHandler.toggleFavoriteStatus(userId, pharmacy.getAddress(), new FirebaseDBHandler.OnFavoriteToggleListener() {
+            dbHandler.toggleFavoriteStatus(userId, pharmacy.getId(), new FirebaseDBHandler.OnFavoriteToggleListener() {
                 @Override
                 public void onAddedToFavorite() {
                     Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
@@ -207,6 +209,8 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 Toast.makeText(PharmacyInformationPannel.this, "Pharmacy flagged successfully", Toast.LENGTH_SHORT).show();
                 pharmacy.setFlagged(true);
                 button.setImageResource(R.drawable.ic_favorite_full);
+                Intent intent = new Intent(PharmacyInformationPannel.this, MainMenu.class);
+                startActivity(intent);
             }
 
             @Override
@@ -230,16 +234,6 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         });
 
     }
-
-
-    private void updateFlagButton(boolean isFlagged, ImageButton button) {
-        if (isFlagged) {
-            button.setImageResource(R.drawable.ic_flag_full);
-        } else {
-            button.setImageResource(R.drawable.ic_flag_outline);
-        }
-    }
-
 
     private void setupAddMedicineButton(Pharmacy pharmacy) {
         Button addMedicineButton = findViewById(R.id.button_add_medicine);
@@ -311,6 +305,10 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                             public void onNotificationToggleClick(Medicine medicine, boolean isActive) {
                                 // Logic to handle the notification toggle action
                                 if (isActive) {
+                                    if (!pharmacy.isFavorite()) {
+                                        Toast.makeText(PharmacyInformationPannel.this, "Please add pharmacy to favorites to receive notifications", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
                                     createNotification(pharmacy.getId(), medicine.getId());
                                 } else {
                                     removeNotification(pharmacy.getId(), medicine.getId());

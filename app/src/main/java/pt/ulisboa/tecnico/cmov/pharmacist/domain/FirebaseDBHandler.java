@@ -29,10 +29,13 @@ public class FirebaseDBHandler {
     private static final String MEDICINES_NODE = "medicine";
     private static final String PHARMACIES_NODE = "pharmacy";
     private static final String USER_NODE = "user";
-    private static final String FAVORITES_NODE = "favorites";
+    private static final String FAVORITES_NODE = "favorite_pharmacies";
     private static final String INVENTORY_NODE = "inventory";
     private static final String NOTIFICATIONS_NODE = "notifications";
     private static final String FLAGGED_NODE = "flagged_pharmacies";
+
+    private static final String FLAGGED_BY_NODE = "flagged_by";
+
     private final String TAG = "FirebaseDBHandler";
 
     private final DatabaseReference databaseReference;
@@ -142,8 +145,9 @@ public class FirebaseDBHandler {
             if (userTask.isSuccessful()) {
                 DataSnapshot userSnapshot = userTask.getResult();
 
-                if (userSnapshot.hasChild("favorite_pharmacies")) {
-                    for (DataSnapshot favoriteSnapshot : userSnapshot.child("favorite_pharmacies").getChildren()) {
+                if (userSnapshot.hasChild(FAVORITES_NODE)) {
+                    for (DataSnapshot favoriteSnapshot : userSnapshot.child(FAVORITES_NODE).getChildren()) {
+
                         favoritePharmacies.add(favoriteSnapshot.getKey());
                         Log.d("loadPharmacies", "Loaded favorite pharmacy ID: " + favoriteSnapshot.getKey());
                     }
@@ -151,8 +155,8 @@ public class FirebaseDBHandler {
                     Log.d("loadPharmacies", "No favorite pharmacies found");
                 }
 
-                if (userSnapshot.hasChild("flagged_pharmacies")) {
-                    for (DataSnapshot flaggedSnapshot : userSnapshot.child("flagged_pharmacies").getChildren()) {
+                if (userSnapshot.hasChild(FLAGGED_NODE)) {
+                    for (DataSnapshot flaggedSnapshot : userSnapshot.child(FLAGGED_NODE).getChildren()) {
                         flaggedPharmacies.add(flaggedSnapshot.getKey());
                         Log.d("loadPharmacies", "Loaded flagged pharmacy ID: " + flaggedSnapshot.getKey());
                     }
@@ -222,12 +226,11 @@ public class FirebaseDBHandler {
     }
 
 
-
-    public void toggleFavoriteStatus(String userId, String pharmacyAddress, OnFavoriteToggleListener listener) {
+    public void toggleFavoriteStatus(String userId, String pharmacyId, OnFavoriteToggleListener listener) {
         DatabaseReference usersRef = databaseReference.child(USER_NODE);
         Query query = usersRef.orderByKey().equalTo(userId);
 
-        Log.d("toggleFavoriteStatus", "Toggling favorite status for user: " + userId + ", pharmacy: " + pharmacyAddress);
+        Log.d("toggleFavoriteStatus", "Toggling favorite status for user: " + userId + ", pharmacy: " + pharmacyId);
 
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -237,9 +240,9 @@ public class FirebaseDBHandler {
                     return; // Exit if the user doesn't exist
                 }
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-                    if (userSnapshot.child(FAVORITES_NODE).hasChild(pharmacyAddress)) {
+                    if (userSnapshot.child(FAVORITES_NODE).hasChild(pharmacyId)) {
                         Log.d("toggleFavoriteStatus", "Removing pharmacy from favorites.");
-                        userSnapshot.child(FAVORITES_NODE).child(pharmacyAddress).getRef().removeValue()
+                        userSnapshot.child(FAVORITES_NODE).child(pharmacyId).getRef().removeValue()
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
                                         Log.d("toggleFavoriteStatus", "Pharmacy removed from favorites successfully.");
@@ -251,7 +254,7 @@ public class FirebaseDBHandler {
                                 });
                     } else {
                         Log.d("toggleFavoriteStatus", "Adding pharmacy to favorites.");
-                        userSnapshot.child(FAVORITES_NODE).child(pharmacyAddress).getRef().setValue(true)
+                        userSnapshot.child(FAVORITES_NODE).child(pharmacyId).getRef().setValue(true)
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
                                         Log.d("toggleFavoriteStatus", "Pharmacy added to favorites successfully.");
@@ -356,10 +359,10 @@ public class FirebaseDBHandler {
                                 ref.child("email").setValue(user.getEmail());
                                 ref.child("password").setValue(user.getPassword());
                                 if (user.getFlaggedPharmacies() != null) {
-                                    ref.child("flagged_pharmacies").setValue(user.getFlaggedPharmacies());
+                                    ref.child(FLAGGED_NODE).setValue(user.getFlaggedPharmacies());
                                 }
                                 if (user.getFavoritesPharmacies() != null) {
-                                    ref.child("favorite_pharmacies").setValue(user.getFavoritesPharmacies());
+                                    ref.child(FAVORITES_NODE).setValue(user.getFavoritesPharmacies());
                                 }
                                 ref.child("suspended").setValue(false).addOnSuccessListener(
                                                 aVoid -> {
@@ -691,7 +694,7 @@ public class FirebaseDBHandler {
 
         Log.d("Flagging", "Attempting to flag pharmacy: " + pharmacyId + " by user: " + userId);
 
-        userRef.child("flagged_pharmacies").child(pharmacyId).setValue(true).addOnCompleteListener(task -> {
+        userRef.child(FLAGGED_NODE).child(pharmacyId).setValue(true).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Log.d("Flagging", "Successfully flagged pharmacy: " + pharmacyId);
                 checkAndHandleUserSuspension(userId, listener);
@@ -701,7 +704,7 @@ public class FirebaseDBHandler {
             }
         });
 
-        pharmacyRef.child("flagged_by").child(userId).setValue(true).addOnCompleteListener(task -> {
+        pharmacyRef.child(FLAGGED_BY_NODE).child(userId).setValue(true).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Log.d("Flagging", "Successfully flagged pharmacy: " + pharmacyId);
                 checkAndHandlePharmacySuspension(pharmacyId, listener);
@@ -713,7 +716,7 @@ public class FirebaseDBHandler {
     }
 
     private void checkAndHandleUserSuspension(String userId, OnFlaggedPharmacy listener) {
-        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child("flagged_pharmacies");
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child(FLAGGED_NODE);
 
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -744,7 +747,7 @@ public class FirebaseDBHandler {
     }
 
     private void checkAndHandlePharmacySuspension(String pharmacyId, OnFlaggedPharmacy listener) {
-        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child("flagged_by");
+        DatabaseReference pharmacyRef = databaseReference.child(PHARMACIES_NODE).child(pharmacyId).child(FLAGGED_BY_NODE);
 
         pharmacyRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
