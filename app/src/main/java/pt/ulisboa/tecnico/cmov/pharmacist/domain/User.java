@@ -11,6 +11,7 @@ public class User {
     ArrayList<Pharmacy> favoritePharmacy;
     ArrayList<Pharmacy> flaggedPharmacy;
 
+    ArrayList<Medicine> notificationMedicine;
 
     public User(String name, String email, String password) {
         this.id = null;
@@ -19,6 +20,7 @@ public class User {
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
         this.flaggedPharmacy = new ArrayList<Pharmacy>();
+        this.notificationMedicine = new ArrayList<Medicine>();
         this.isGuest = name.equals("Guest");
 
     }
@@ -30,6 +32,7 @@ public class User {
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
         this.flaggedPharmacy = new ArrayList<Pharmacy>();
+        this.notificationMedicine = new ArrayList<Medicine>();
         this.isGuest = name.equals("Guest");
     }
 
@@ -40,6 +43,7 @@ public class User {
         this.password = password;
         this.favoritePharmacy = new ArrayList<Pharmacy>();
         this.flaggedPharmacy = new ArrayList<Pharmacy>();
+        this.notificationMedicine = new ArrayList<Medicine>();
         this.isGuest = name.equals("Guest");
         this.isSuspended = isSuspended;
     }
@@ -103,4 +107,13 @@ public class User {
     public void setSuspended(Boolean suspended) {
         isSuspended = suspended;
     }
+
+    public void addNotificationMedicine(Medicine medicine) {
+        this.notificationMedicine.add(medicine);
+    }
+
+    public void removeNotificationMedicine(Medicine medicine) {
+        this.notificationMedicine.remove(medicine);
+    }
+
 }

@@ -8,9 +8,4 @@
         android:id="@+id/item_add"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/add_manually" />
-    <item
-        android:id="@+id/item_edit"
-        android:icon="@android:drawable/ic_menu_edit"
-        android:title="@string/edit" />
-
 </menu>

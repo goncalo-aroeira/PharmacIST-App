@@ -79,6 +79,7 @@ public class FirebaseDBHandler {
                         medicine.setImageBytes(snapshot.child("imageBytes").getValue(String.class));
                     }
 
+
                     Log.d(TAG, "Listener Medicine: " + medicine.getName());
                     listener.onMedicineLoaded(medicine);
                 }
@@ -565,6 +566,22 @@ public class FirebaseDBHandler {
 
     }
 
+    public void checkNotificationExists(String medicineId, String userId, OnCheckNotificationExists listener) {
+        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
+        Query query = notificationsRef.orderByChild("medicineId").equalTo(medicineId);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                listener.onExists(dataSnapshot.exists());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
 
     private void sendNotification(Context context, String pharmacyId, String medicineId, String userId) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(context, NotificationManager.class);
@@ -607,81 +624,57 @@ public class FirebaseDBHandler {
 
     }
 
-    public void addNotification(String medicineId, String pharmacyId, String userId, OnChangeListener listener) {
-        DatabaseReference notificationsRef = databaseReference.child(NOTIFICATIONS_NODE).push();
-        notificationsRef.child("medicineId").setValue(medicineId);
-        notificationsRef.child("pharmacyId").setValue(pharmacyId);
-        notificationsRef.child("userId").setValue(userId)
+    public void addNotification(String medicineId, String userId, onCreateNotification listener) {
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    if (snapshot.getKey().equals(medicineId)) {
+                        listener.onAlreadyExists();
+                        return;
+                    }
+                }
+                userRef.child(medicineId).setValue(true);
+                listener.onSuccess();
+
+            }
+
+            ;
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+    }
+
+    public void getNotificationsForUser(String userId, OnLoadUserNotifications listener) {
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<String> medicineIds = new ArrayList<>();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    medicineIds.add(snapshot.getKey());
+                }
+                listener.onLoaded(medicineIds);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+
+    }
+
+    public void removeNotification(String medicineId, String userId, OnChangeListener listener) {
+        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
+        userRef.child(medicineId).removeValue()
                 .addOnSuccessListener(aVoid -> listener.onSuccess())
                 .addOnFailureListener(listener::onFailure);
     }
-
-    public void getNotificationsForUser(String userId, OnChangeListener listener) {
-        DatabaseReference notificationsRef = databaseReference.child(NOTIFICATIONS_NODE);
-        Query query = notificationsRef.orderByChild("userId").equalTo(userId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    String medicineId = snapshot.child("medicineId").getValue(String.class);
-                    String pharmacyId = snapshot.child("pharmacyId").getValue(String.class);
-                    listener.onSuccess();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-    public void removeNotification(String medicineId, String pharmacyId, String userId, OnChangeListener listener) {
-        DatabaseReference notificationsRef = databaseReference.child(NOTIFICATIONS_NODE);
-        Query query = notificationsRef.orderByChild("userId").equalTo(userId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId) &&
-                            snapshot.child("pharmacyId").getValue(String.class).equals(pharmacyId)) {
-                        snapshot.getRef().removeValue().addOnCompleteListener(task -> listener.onSuccess());
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-    public void getNotificationByPharmacyAndMedicine(String medicineId, String pharmacyId, String userId, OnChangeListener listener) {
-        DatabaseReference notificationsRef = databaseReference.child(NOTIFICATIONS_NODE);
-        Query query = notificationsRef.orderByChild("medicineId").equalTo(medicineId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId) &&
-                            snapshot.child("pharmacyId").getValue(String.class).equals(pharmacyId)) {
-                        listener.onSuccess();
-                    }
-                }
-                listener.onFailure(new Exception("Notification not found"));
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-
-
-
 
     /* ============================================================================================
                                            META-DATA CONTROL
@@ -996,6 +989,20 @@ public class FirebaseDBHandler {
         void onNotEnoughStock();
 
         void onSuccess();
+    }
+
+    public interface onCreateNotification extends FirebaseDBHandlerListener {
+        void onSuccess();
+
+        void onAlreadyExists();
+    }
+
+    public interface OnLoadUserNotifications extends FirebaseDBHandlerListener {
+        void onLoaded(ArrayList<String> medicine_ids);
+    }
+
+    public interface OnCheckNotificationExists extends FirebaseDBHandlerListener {
+        void onExists(boolean exists);
     }
 
 }

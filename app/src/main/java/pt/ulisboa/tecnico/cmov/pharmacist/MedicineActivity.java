@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
@@ -39,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
@@ -53,8 +51,6 @@ public class MedicineActivity extends AppCompatActivity {
 
     // Domain
     private HashMap<Pharmacy, Integer> pharmacies = new HashMap<>();
-    private CursorAdapter suggestionAdapter;
-    private Set<String> allMedicineNames;
     private AutoCompleteTextView searchInput;
     private PharmacyStockAdapter pharmacyAdapter;
     private ListView pharmacyListView;
@@ -121,7 +117,6 @@ public class MedicineActivity extends AppCompatActivity {
 
         MenuItem scanItem = popup.getMenu().findItem(R.id.item_scan).setVisible(true);
         MenuItem addItem = popup.getMenu().findItem(R.id.item_add).setVisible(true);
-        MenuItem editItem = popup.getMenu().findItem(R.id.item_edit).setVisible(false);
 
         popup.setOnMenuItemClickListener(menuItem -> {
             Log.d("Clicked Event", "onMenuItemClick: " + menuItem.getTitle() + " clicked");
@@ -129,8 +124,6 @@ public class MedicineActivity extends AppCompatActivity {
                 checkPermissionAndShowActivity(this);
             } else if (menuItem.getItemId() == addItem.getItemId()) {
                 startActivity(new Intent(getApplicationContext(), CreateMedicine.class));
-            } else if (menuItem.getItemId() == editItem.getItemId()) {
-                // Edit item action here
             }
             return true;
         });

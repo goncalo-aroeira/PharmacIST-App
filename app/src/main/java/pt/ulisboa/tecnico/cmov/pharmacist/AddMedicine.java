@@ -92,6 +92,7 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
 
         if (medicine_key != null) {
             Log.d("AddMedicine", "onCreate: medicine_key: " + medicine_key);
+
             firebaseDBHandler.getMedicineById(medicine_key, new FirebaseDBHandler.OnMedicineLoadedListener() {
                 @Override
                 public void onMedicineLoaded(Medicine medicine) {

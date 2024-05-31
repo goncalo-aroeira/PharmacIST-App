@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.cmov.pharmacist;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -57,11 +56,6 @@ public class MainMenu extends AppCompatActivity {
             return;
         }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // Request permissions
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
-            return;
-        }
 
         initializeViewsAndFirebase();
 

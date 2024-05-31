@@ -51,5 +51,6 @@ public class PharmacyStockAdapter extends ArrayAdapter<Map.Entry<Pharmacy, Integ
 
         return listItem;
     }
+
 }
 

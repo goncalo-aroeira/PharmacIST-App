@@ -111,9 +111,6 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 return;
             }
 
-            Log.d("PharmacyInformationPannel", "IS FAVORITE: " + pharmacy.isFavorite());
-
-
             populateDetailView(pharmacy);
             setupMap(pharmacyLocation, pharmacy.getName());
             setupButtons(pharmacy, pharmacyLocation);
@@ -184,12 +181,14 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 public void onAddedToFavorite() {
                     Toast.makeText(PharmacyInformationPannel.this, "Pharmacy added to favorites", Toast.LENGTH_SHORT).show();
                     addToFavoritesButton.setImageResource(R.drawable.ic_favorite_full);
+                    pharmacy.setFavorite(true);
                 }
 
                 @Override
                 public void onRemovedFromFavorite() {
                     Toast.makeText(PharmacyInformationPannel.this, "Pharmacy removed from favorites", Toast.LENGTH_SHORT).show();
                     addToFavoritesButton.setImageResource(R.drawable.ic_favorite_outline);
+                    pharmacy.setFavorite(false);
                 }
 
                 @Override
@@ -302,18 +301,13 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                             }
 
                             @Override
-                            public void onNotificationToggleClick(Medicine medicine, boolean isActive) {
-                                // Logic to handle the notification toggle action
-                                if (isActive) {
-                                    if (!pharmacy.isFavorite()) {
-                                        Toast.makeText(PharmacyInformationPannel.this, "Please add pharmacy to favorites to receive notifications", Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-                                    createNotification(pharmacy.getId(), medicine.getId());
-                                } else {
-                                    removeNotification(pharmacy.getId(), medicine.getId());
-                                }
+                            public void onMedicineClick(Medicine medicine) {
+                                Log.d(TAG, "onMedicineClick: clicked on medicine: " + medicine);
+                                Intent intent = new Intent(PharmacyInformationPannel.this, MedicineInformationPannel.class);
+                                intent.putExtra("medicine_id", medicine.getId());
+                                startActivity(intent);
                             }
+
                         });
                         recyclerViewMedicines.setAdapter(adapter);
                     } else {
@@ -322,6 +316,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
                 });
 
             }
+
 
             @Override
             public void onFailure(Exception e) {
@@ -390,37 +385,7 @@ public class PharmacyInformationPannel extends AppCompatActivity{
         setLocale(language);
     }
 
-    private void createNotification(String pharmacy_id, String medicine_id) {
 
-        String userId = new UserLocalStore(this).getLoggedInEmail();
-        dbHandler.addNotification(pharmacy.getId(), medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
-            @Override
-            public void onSuccess() {
-                Toast.makeText(PharmacyInformationPannel.this, "Notification created successfully", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Toast.makeText(PharmacyInformationPannel.this, "Failed to create notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-        private void removeNotification(String pharmacy_id, String medicine_id) {
-
-            String userId = new UserLocalStore(this).getLoggedInEmail();
-            dbHandler.removeNotification(pharmacy.getId(), medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
-                @Override
-                public void onSuccess() {
-                    Toast.makeText(PharmacyInformationPannel.this, "Notification removed successfully", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Toast.makeText(PharmacyInformationPannel.this, "Failed to removed notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
 
     private void purchaseMedicine(String medicine_id, int quantity) {
         dbHandler.purchaseMedicineFromPharmacy(pharmacy.getId(), medicine_id, quantity,  new FirebaseDBHandler.OnPurchaseMedicineListener() {

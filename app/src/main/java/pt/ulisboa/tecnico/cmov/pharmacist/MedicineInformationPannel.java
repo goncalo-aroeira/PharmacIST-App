@@ -7,6 +7,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -20,7 +21,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -37,7 +37,6 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.FirebaseDBHandler;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
-import pt.ulisboa.tecnico.cmov.pharmacist.domain.UserLocalStore;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.PharmacyAdapter;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
@@ -52,6 +51,7 @@ public class MedicineInformationPannel extends AppCompatActivity {
     private LatLng currentUserLocation;
     private static final int LOCATION_REQUEST_CODE = 101;
     private HashMap<String, LatLng> addressCache = new HashMap<>();
+    private ImageButton toggleNotificatioButton;
 
     private Medicine medicine;
 
@@ -73,10 +73,12 @@ public class MedicineInformationPannel extends AppCompatActivity {
         medicineNameTextView = findViewById(R.id.textView_medicine_name);
         medicinePurposeTextView = findViewById(R.id.textView_medicine_usage);
         medicineImageView = findViewById(R.id.ivMedicinePhoto);
+        toggleNotificatioButton = findViewById(R.id.imageButton_notification);
 
 
         // Retrieve and display medicine data
         String medicine_id = (String) getIntent().getStringExtra("medicine_id");
+
         dbHandler.getMedicineById(medicine_id, new FirebaseDBHandler.OnMedicineLoadedListener() {
             @Override
             public void onMedicineLoaded(Medicine medicine) {
@@ -85,6 +87,7 @@ public class MedicineInformationPannel extends AppCompatActivity {
                 medicinePurposeTextView.setText(medicine.getUsage());
                 Bitmap image = utils.convertCompressedByteArrayToBitmap(medicine.getImageBytes());
                 medicineImageView.setImageBitmap(image);
+                toggleNotification(medicine);
                 fetchAllPharmacies(medicine);
 
             }
@@ -114,6 +117,42 @@ public class MedicineInformationPannel extends AppCompatActivity {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+
+    private void toggleNotification(Medicine medicine) {
+        UserLocalStore userLocalStore = new UserLocalStore(this);
+        if (userLocalStore.getLoggedInId() != null) {
+            dbHandler.checkNotificationExists(medicine.getId(), userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnCheckNotificationExists() {
+                @Override
+                public void onExists(boolean exists) {
+                    if (exists) {
+                        medicine.setHasNotification(true);
+                        toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
+                    } else {
+                        medicine.setHasNotification(false);
+                        toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.e("MedicineInformationPannel", "Failed to check notification", e);
+                }
+            });
+        }
+
+        toggleNotificatioButton.setOnClickListener(v -> {
+            if (medicine.getHasNotification()) {
+                removeNotification(medicine.getId());
+                medicine.setHasNotification(false);
+                toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
+            } else {
+                createNotification(medicine.getId());
+                medicine.setHasNotification(true);
+                toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
+            }
+        });
     }
 
     private void fetchAllPharmacies(Medicine medicine) {
@@ -264,6 +303,46 @@ public class MedicineInformationPannel extends AppCompatActivity {
         } else {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
+    }
+
+
+    private void createNotification(String medicine_id) {
+
+        String userId = new UserLocalStore(this).getLoggedInId();
+
+        dbHandler.addNotification(medicine_id, userId, new FirebaseDBHandler.onCreateNotification() {
+
+            @Override
+            public void onAlreadyExists() {
+                Toast.makeText(MedicineInformationPannel.this, "Notification already exists", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSuccess() {
+                Toast.makeText(MedicineInformationPannel.this, "Notification created successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(MedicineInformationPannel.this, "Failed to create notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void removeNotification(String medicine_id) {
+
+        String userId = new UserLocalStore(this).getLoggedInEmail();
+        dbHandler.removeNotification(medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(MedicineInformationPannel.this, "Notification removed successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(MedicineInformationPannel.this, "Failed to removed notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
 

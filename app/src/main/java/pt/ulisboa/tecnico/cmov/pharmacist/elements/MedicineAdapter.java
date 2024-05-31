@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.HashMap;
 import java.util.List;
 
-import pt.ulisboa.tecnico.cmov.pharmacist.MedicineInformationPannel;
 import pt.ulisboa.tecnico.cmov.pharmacist.R;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 
@@ -49,9 +47,7 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
 
         // Setting up the OnClickListener to open MedicineInformationActivity
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, MedicineInformationPannel.class);
-            intent.putExtra("medicine_id", med.getId());  // Ensure Medicine class implements Serializable or Parcelable
-            context.startActivity(intent);
+            listener.onMedicineClick(med);
         });
 
         // Setting up the button click listeners
@@ -62,23 +58,12 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             }
         });
 
-        holder.notificationActiveButton.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onNotificationToggleClick(med, true);
-            }
-        });
-
-        holder.notificationInactiveButton.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onNotificationToggleClick(med, false);
-            }
-        });
-
     }
 
     public interface OnMedicineItemClickListener {
         void onPurchaseClick(Medicine medicine);
-        void onNotificationToggleClick(Medicine medicine, boolean isActive);
+
+        void onMedicineClick(Medicine medicine);
     }
 
 
@@ -91,7 +76,7 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         TextView textViewMedicineName;
         TextView textViewMedicineQuantity;
 
-        ImageButton purchaseButton, notificationActiveButton, notificationInactiveButton;
+        ImageButton purchaseButton;
 
 
         public MedicineViewHolder(@NonNull View itemView) {
@@ -99,8 +84,6 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             textViewMedicineName = itemView.findViewById(R.id.textViewMedicineName);
             textViewMedicineQuantity = itemView.findViewById(R.id.textViewMedicineQuantity);
             purchaseButton = itemView.findViewById(R.id.imageButtonPurcharse);
-            notificationActiveButton = itemView.findViewById(R.id.imageButtonNotificationActive);
-            notificationInactiveButton = itemView.findViewById(R.id.imageButtonNotificationInactive);
         }
     }
 }

@@ -1,10 +1,7 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
-import android.widget.ImageView;
-
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.UUID;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.utils;
 
@@ -14,6 +11,8 @@ public class Medicine implements Serializable {
     String name;
     String imageBytes;
     String usage;
+
+    Boolean hasNotification = false;
 
     public Medicine(String name) {
         this.id = null;
@@ -74,6 +73,14 @@ public class Medicine implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    public Boolean getHasNotification() {
+        return hasNotification;
+    }
+
+    public void setHasNotification(Boolean hasNotification) {
+        this.hasNotification = hasNotification;
     }
 
 
