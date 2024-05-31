@@ -59,15 +59,10 @@ public class FirebaseDBHandler {
 
     public void getMedicineById(String id, OnMedicineLoadedListener listener) {
         DatabaseReference medicinesRef = databaseReference.child(MEDICINES_NODE);
-        Log.d(TAG, "getMedicineById function: " + id);
-
         Query query = medicinesRef.orderByKey().equalTo(id);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // print
-                Log.d(TAG, "onDataChange: Medicine ID: " + id);
-
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Medicine medicine = new Medicine(
                             snapshot.child("id").getValue(String.class),
@@ -675,34 +670,6 @@ public class FirebaseDBHandler {
     }
 
 
-    public void getNotificationsForUser(String userId, OnLoadUserNotifications listener) {
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ArrayList<String> medicineIds = new ArrayList<>();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    medicineIds.add(snapshot.getKey());
-                }
-                listener.onLoaded(medicineIds);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-    public interface OnNotificationCheckListener {
-        void onNotificationAvailable(String medicineId, String pharmacyId, int quantity);
-        void onFailure(Exception exception);
-    }
-
-
-
-
-
     /* ============================================================================================
                                            META-DATA CONTROL
       ============================================================================================= */
@@ -832,7 +799,6 @@ public class FirebaseDBHandler {
         });
     }
 
-    // Adjust the listener interface to handle a HashMap of names to IDs
     public interface OnMedicineNamesAndIdsLoaded {
         void onLoaded(HashMap<String, String> medicineNamesAndIds);
         void onError(Exception e);
@@ -937,10 +903,7 @@ public class FirebaseDBHandler {
     /* ============================================================================================
                                            LISTENER INTERFACES
       ============================================================================================= */
-    public interface OnPharmaciesWithMedicineListener {
-        void onPharmaciesFound(ArrayList<Pharmacy> pharmacies);
-        void onFailure(Exception e);
-    }
+
 
     public interface PasswordCallback {
         void onUserNotFound();
@@ -951,15 +914,9 @@ public class FirebaseDBHandler {
 
     }
 
-    public interface OnImageSavedListener extends FirebaseDBHandlerListener {
-        void onImageSaved(String imageName);
-
-    }
-
     public interface OnMedicineLoadedListener extends FirebaseDBHandlerListener {
         void onMedicineLoaded(Medicine medicine);
     }
-
 
     public interface FirebaseDBHandlerListener {
         void onFailure(Exception e);
@@ -977,9 +934,6 @@ public class FirebaseDBHandler {
         void onPharmacyLoaded(Pharmacy pharmacy);
     }
 
-    public interface OnGetFavoritesPharmacies extends FirebaseDBHandlerListener {
-        void OnPharmaciesLoadedSuccessfully(ArrayList<String> pharmacies);
-    }
     public interface OnFavoriteToggleListener {
         void onAddedToFavorite();
         void onRemovedFromFavorite();
@@ -992,7 +946,6 @@ public class FirebaseDBHandler {
         void onEmailExists();
         void onUsernameExists();
     }
-
 
     public interface OnMedicinesLoadedListener extends FirebaseDBHandlerListener {
         void onMedicinesLoaded(ArrayList<Medicine> medicines);
@@ -1010,7 +963,6 @@ public class FirebaseDBHandler {
         void onAccountSuspended();  // Called when the user account is suspended due to excessive flags
         void onFailure(Exception e);  // Called when there is an error in the flagging process
     }
-
 
     public interface OnPurchaseMedicineListener extends FirebaseDBHandlerListener {
         void onNotEnoughStock();

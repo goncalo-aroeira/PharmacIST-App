@@ -48,6 +48,10 @@ public class User {
         this.isSuspended = isSuspended;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public void generateId() {
         this.id = utils.generateRandomId(5);
     }

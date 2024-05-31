@@ -40,6 +40,11 @@ public class Register extends AppCompatActivity {
             return insets;
         });
 
+        String id = getIntent().getStringExtra("id");
+        if (id != null) {
+            UserLocalStore userLocalStore = new UserLocalStore(this);
+        }
+
         firebaseDBHandler = new FirebaseDBHandler();
 
 
@@ -50,9 +55,16 @@ public class Register extends AppCompatActivity {
 
         UserLocalStore userLocalStore = new UserLocalStore(this);
 
+
         btnRegister.setOnClickListener(view -> {
             User newUser = new User(etUsername.getText().toString(), etEmail.getText().toString(), etPassword.getText().toString());
-            newUser.generateId();
+
+            if (id != null) {
+                newUser.setId(id);
+            } else {
+                newUser.generateId();
+            }
+
             firebaseDBHandler.registerUser(newUser, new FirebaseDBHandler.OnRegistrationListener() {
 
                 @Override
