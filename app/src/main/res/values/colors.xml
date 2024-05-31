@@ -2,13 +2,13 @@
 <resources>
 
     <!-- Light mode colors -->
-    <color name="primary_color">#6200EE</color>
-    <color name="primary_variant">#3700B3</color>
-    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_color">#87CEEB</color>
+    <color name="primary_variant">#1787B5</color>
+    <color name="on_primary">#F5F5F5</color>
 
-    <color name="secondary_color">#03DAC5</color>
-    <color name="secondary_variant">#018786</color>
-    <color name="on_secondary">#000000</color>
+    <color name="secondary_color">#263B5E</color>
+    <color name="secondary_variant">#062250</color>
+    <color name="on_secondary">#808080</color>
 
     <color name="on_background">#000000</color>
     <color name="on_surface">#000000</color>
@@ -23,8 +23,8 @@
     <color name="primary_variant_dark">#484848</color>
     <color name="on_primary_dark">#FFFFFF</color>
 
-    <color name="secondary_color_dark">#FFC107</color>
-    <color name="secondary_variant_dark">#FFA000</color>
+    <color name="secondary_color_dark">#2196F3</color>
+    <color name="secondary_variant_dark">#03365E</color>
     <color name="on_secondary_dark">#000000</color>
 
     <color name="on_background_dark">#FFFFFF</color>
@@ -32,6 +32,6 @@
     <color name="on_error_dark">#FFFFFF</color>
     <color name="surface_dark">#121212</color>
     <color name="background_dark">#121212</color>
-    <color name="error_dark">#CF6679</color>
+    <color name="error_dark">#B00020</color>
 
 </resources>
