@@ -71,6 +71,12 @@ public class Map<S, B> extends AppCompatActivity implements OnMapReadyCallback {
             return insets;
         });
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // return to previous activity
+            Toast.makeText(this, "Location permission is required to view pharmacy information", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         UserLocalStore userLocalStore = new UserLocalStore(this);
         String userID = userLocalStore.getLoggedInId();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);

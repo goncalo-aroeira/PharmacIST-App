@@ -40,6 +40,12 @@ public class MapPicker extends AppCompatActivity implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_picker);
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // return to previous activity
+            Toast.makeText(this, "Location permission is required to view pharmacy information", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         searchAddress = findViewById(R.id.search_address);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 

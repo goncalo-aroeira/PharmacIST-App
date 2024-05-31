@@ -56,7 +56,6 @@ public class MainMenu extends AppCompatActivity {
             return;
         }
 
-
         initializeViewsAndFirebase();
 
 

@@ -75,6 +75,12 @@ public class AddPharmacy extends AppCompatActivity implements BottomSheetMenuFra
             return insets;
         });
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // return to previous activity
+            Toast.makeText(this, "Location permission is required to view pharmacy information", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         firebaseDBHandler = new FirebaseDBHandler();
 
         etName = findViewById(R.id.etName);
