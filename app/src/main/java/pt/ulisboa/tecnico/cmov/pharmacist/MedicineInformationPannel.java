@@ -74,7 +74,9 @@ public class MedicineInformationPannel extends AppCompatActivity {
         medicinePurposeTextView = findViewById(R.id.textView_medicine_usage);
         medicineImageView = findViewById(R.id.ivMedicinePhoto);
         toggleNotificatioButton = findViewById(R.id.imageButton_notification);
-
+        toggleNotificatioButton.setOnClickListener(v -> {
+            toggleNotifications(medicine.getId());
+        });
 
         // Retrieve and display medicine data
         String medicine_id = (String) getIntent().getStringExtra("medicine_id");
@@ -83,12 +85,34 @@ public class MedicineInformationPannel extends AppCompatActivity {
             @Override
             public void onMedicineLoaded(Medicine medicine) {
                 MedicineInformationPannel.this.medicine = medicine;
+
+                UserLocalStore userLocalStore = new UserLocalStore(MedicineInformationPannel.this);
+                if (userLocalStore.getLoggedInId() != null) {
+                    dbHandler.checkNotificationExists(medicine.getId(), userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnCheckNotificationExists() {
+                        @Override
+                        public void onExists(boolean exists) {
+                            if (exists) {
+                                medicine.setHasNotification(true);
+                                toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
+                            } else {
+                                medicine.setHasNotification(false);
+                                toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.e("MedicineInformationPannel", "Failed to check notification", e);
+                        }
+                    });
+                }
+
                 medicineNameTextView.setText(medicine.getName());
                 medicinePurposeTextView.setText(medicine.getUsage());
                 Bitmap image = utils.convertCompressedByteArrayToBitmap(medicine.getImageBytes());
                 medicineImageView.setImageBitmap(image);
-                toggleNotification(medicine);
                 fetchAllPharmacies(medicine);
+
 
             }
 
@@ -117,42 +141,6 @@ public class MedicineInformationPannel extends AppCompatActivity {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-
-    private void toggleNotification(Medicine medicine) {
-        UserLocalStore userLocalStore = new UserLocalStore(this);
-        if (userLocalStore.getLoggedInId() != null) {
-            dbHandler.checkNotificationExists(medicine.getId(), userLocalStore.getLoggedInId(), new FirebaseDBHandler.OnCheckNotificationExists() {
-                @Override
-                public void onExists(boolean exists) {
-                    if (exists) {
-                        medicine.setHasNotification(true);
-                        toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
-                    } else {
-                        medicine.setHasNotification(false);
-                        toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Log.e("MedicineInformationPannel", "Failed to check notification", e);
-                }
-            });
-        }
-
-        toggleNotificatioButton.setOnClickListener(v -> {
-            if (medicine.getHasNotification()) {
-                removeNotification(medicine.getId());
-                medicine.setHasNotification(false);
-                toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
-            } else {
-                createNotification(medicine.getId());
-                medicine.setHasNotification(true);
-                toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
-            }
-        });
     }
 
     private void fetchAllPharmacies(Medicine medicine) {
@@ -306,20 +294,22 @@ public class MedicineInformationPannel extends AppCompatActivity {
     }
 
 
-    private void createNotification(String medicine_id) {
+    private void toggleNotifications(String medicine_id) {
 
         String userId = new UserLocalStore(this).getLoggedInId();
 
-        dbHandler.addNotification(medicine_id, userId, new FirebaseDBHandler.onCreateNotification() {
+        dbHandler.toggleNotification(medicine_id, userId, new FirebaseDBHandler.OnNotificationToggleListener() {
 
             @Override
-            public void onAlreadyExists() {
-                Toast.makeText(MedicineInformationPannel.this, "Notification already exists", Toast.LENGTH_SHORT).show();
+            public void onAddedNotification() {
+                Toast.makeText(MedicineInformationPannel.this, "Notification created", Toast.LENGTH_SHORT).show();
+                toggleNotificatioButton.setImageResource(R.drawable.ic_notification_active);
             }
 
             @Override
-            public void onSuccess() {
-                Toast.makeText(MedicineInformationPannel.this, "Notification created successfully", Toast.LENGTH_SHORT).show();
+            public void onRemovedNotification() {
+                Toast.makeText(MedicineInformationPannel.this, "Notification removed", Toast.LENGTH_SHORT).show();
+                toggleNotificatioButton.setImageResource(R.drawable.ic_notifications);
             }
 
             @Override
@@ -328,22 +318,4 @@ public class MedicineInformationPannel extends AppCompatActivity {
             }
         });
     }
-
-    private void removeNotification(String medicine_id) {
-
-        String userId = new UserLocalStore(this).getLoggedInEmail();
-        dbHandler.removeNotification(medicine_id, userId, new FirebaseDBHandler.OnChangeListener() {
-            @Override
-            public void onSuccess() {
-                Toast.makeText(MedicineInformationPannel.this, "Notification removed successfully", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Toast.makeText(MedicineInformationPannel.this, "Failed to removed notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
 }

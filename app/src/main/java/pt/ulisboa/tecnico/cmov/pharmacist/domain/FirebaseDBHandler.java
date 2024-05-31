@@ -20,7 +20,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.R;
@@ -625,26 +624,42 @@ public class FirebaseDBHandler {
 
     }
 
-    public void addNotification(String medicineId, String userId, onCreateNotification listener) {
-        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId).child(NOTIFICATIONS_NODE);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    public void toggleNotification(String userId, String medicineId, OnNotificationToggleListener listener) {
+        DatabaseReference usersRef = databaseReference.child(USER_NODE);
+        Query query = usersRef.orderByKey().equalTo(userId);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if (snapshot.getKey().equals(medicineId)) {
-                        listener.onAlreadyExists();
-                        return;
-                    }
+                if (!dataSnapshot.exists()) {
+                    return; // Exit if the user doesn't exist
                 }
-                userRef.child(medicineId).setValue(true);
-                listener.onSuccess();
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    if (userSnapshot.child(NOTIFICATIONS_NODE).hasChild(medicineId)) {
+                        userSnapshot.child(FAVORITES_NODE).child(medicineId).getRef().removeValue()
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        listener.onRemovedNotification();
+                                    } else {
+                                        listener.onFailure(task.getException());
+                                    }
+                                });
+                    } else {
+                        userSnapshot.child(FAVORITES_NODE).child(medicineId).getRef().setValue(true)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        listener.onAddedNotification();
+                                    } else {
+                                        listener.onFailure(task.getException());
+                                    }
+                                });
+                    }
 
+                }
             }
-
-            ;
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("toggleFavoriteStatus", "Database access cancelled.", databaseError.toException());
                 listener.onFailure(databaseError.toException());
             }
         });
@@ -664,57 +679,6 @@ public class FirebaseDBHandler {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                listener.onFailure(databaseError.toException());
-            }
-        });
-    }
-
-
-    public void checkNotifications(String userId, OnNotificationCheckListener listener) {
-        DatabaseReference userRef = databaseReference.child(USER_NODE).child(userId);
-        DatabaseReference inventoryRef = databaseReference.child(INVENTORY_NODE);
-
-        // Fetch user data for notifications and favorites
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Boolean> notifications = (Map<String, Boolean>) dataSnapshot.child(NOTIFICATIONS_NODE).getValue();
-                Map<String, Boolean> favoritePharmacies = (Map<String, Boolean>) dataSnapshot.child(FAVORITES_NODE).getValue();
-
-                if (notifications == null || favoritePharmacies == null) {
-                    listener.onFailure(new Exception("No notifications or favorite pharmacies set"));
-                    return;
-                }
-
-                // Convert favorite pharmacies to a list of IDs
-                ArrayList<String> pharmacyIds = new ArrayList<>(favoritePharmacies.keySet());
-
-                // Check inventory for each medicine the user wants notifications about
-                for (String medicineId : notifications.keySet()) {
-                    for (String pharmacyId : pharmacyIds) {
-                        inventoryRef.orderByChild("medicineId").equalTo(medicineId)
-                                .get().addOnCompleteListener(task -> {
-                                    if (task.isSuccessful()) {
-                                        for (DataSnapshot inventorySnapshot : task.getResult().getChildren()) {
-                                            String inventoryPharmacyId = inventorySnapshot.child("pharmacyId").getValue(String.class);
-                                            if (pharmacyId.equals(inventoryPharmacyId)) {
-                                                int quantity = inventorySnapshot.child("quantity").getValue(Integer.class);
-                                                if (quantity > 0) {
-                                                    // Notify listener about available medicine
-                                                    listener.onNotificationAvailable(medicineId, pharmacyId, quantity);
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        listener.onFailure(task.getException());
-                                    }
-                                });
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
                 listener.onFailure(databaseError.toException());
             }
         });
@@ -1044,10 +1008,10 @@ public class FirebaseDBHandler {
         void onSuccess();
     }
 
-    public interface onCreateNotification extends FirebaseDBHandlerListener {
-        void onSuccess();
+    public interface OnNotificationToggleListener extends FirebaseDBHandlerListener {
+        void onAddedNotification();
 
-        void onAlreadyExists();
+        void onRemovedNotification();
     }
 
     public interface OnLoadUserNotifications extends FirebaseDBHandlerListener {
