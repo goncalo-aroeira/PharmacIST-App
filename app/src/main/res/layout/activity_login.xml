@@ -61,7 +61,6 @@
         android:layout_marginBottom="124dp"
         android:gravity="center"
         android:text="@string/click_here"
-        android:textAppearance="@style/TextAppearance.PharmacIST.Body1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

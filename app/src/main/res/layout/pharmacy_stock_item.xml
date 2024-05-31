@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="#000000"
+        android:textColor="@color/on_background_dark"
         android:paddingBottom="4dp"/>
 
     <TextView
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:textColor="#666666"
+        android:textColor="@color/primary_color_dark"
         android:paddingBottom="4dp"/>
 
     <TextView
@@ -28,6 +28,6 @@
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:textStyle="italic"
-        android:textColor="#FF5722"/>
+        android:textColor="@color/error" />
 
 </LinearLayout>

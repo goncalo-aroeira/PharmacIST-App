@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="end"
-            android:textColor="#888888"
+            android:textColor="@color/on_background"
             android:textSize="12sp" />
 
     </LinearLayout>
@@ -41,15 +41,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#888888"
+            android:textColor="@color/primary_color_dark"
             android:textSize="14sp" />
 
-        <ImageView
-            android:id="@+id/navigate_image_view"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/marker2" />
 
     </LinearLayout>
 

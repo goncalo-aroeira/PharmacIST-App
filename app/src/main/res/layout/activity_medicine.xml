@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textAppearance="@style/TextAppearance.PharmacIST.Headline3"
+            style="@style/TextAppearance.PharmacIST.Light.Headline1"
             android:text="@string/medicine_menu" />
 
     </LinearLayout>

@@ -126,8 +126,8 @@
 
     <Button
         android:id="@+id/btnChangeLanguage"
-        android:layout_width="100dp"
-        android:layout_height="40dp"
+        android:layout_width="155dp"
+        android:layout_height="39dp"
         android:text="@string/change_language"
         android:textSize="11sp"
         app:layout_constraintEnd_toEndOf="parent"
