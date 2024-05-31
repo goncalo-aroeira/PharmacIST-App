@@ -1,8 +1,15 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.domain;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -14,6 +21,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+
+import pt.ulisboa.tecnico.cmov.pharmacist.R;
 
 
 public class FirebaseDBHandler {
@@ -27,14 +36,10 @@ public class FirebaseDBHandler {
     private final String TAG = "FirebaseDBHandler";
 
     private final DatabaseReference databaseReference;
-    private ArrayList<Pharmacy> allPharmacies;
 
     public FirebaseDBHandler() {
-        // Enable cache
-        //FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.keepSynced(true);
-        allPharmacies = new ArrayList<>();
     }
 
     /* =============================================================================================
@@ -531,6 +536,73 @@ public class FirebaseDBHandler {
      /* ============================================================================================
                                                 NOTIFICATIONS
       ============================================================================================= */
+
+    public void checkAndNotifyUser(Context context, String pharmacyId, String medicineId, OnChangeListener listener) {
+        DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference(NOTIFICATIONS_NODE);
+
+        // look for combination of pharmacyId and medicineId
+
+
+        Query query = notificationsRef.orderByChild("pharmacyId").equalTo(pharmacyId);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    if (snapshot.child("medicineId").getValue(String.class).equals(medicineId)) {
+                        sendNotification(context, pharmacyId, medicineId, snapshot.child("userId").getValue(String.class));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onFailure(databaseError.toException());
+            }
+        });
+
+    }
+
+
+    private void sendNotification(Context context, String pharmacyId, String medicineId, String userId) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(context, NotificationManager.class);
+        String channelId = "inventory_change_channel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Inventory Changes", NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        getMedicineById(medicineId, new OnMedicineLoadedListener() {
+            @Override
+            public void onMedicineLoaded(Medicine medicine) {
+                getPharmacyById(pharmacyId, new OnPharmacyLoadedListener() {
+                    @Override
+                    public void onPharmacyLoaded(Pharmacy pharmacy) {
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                                .setSmallIcon(R.drawable.ic_notifications)
+                                .setContentTitle("Inventory Update")
+                                .setContentText("The inventory of " + medicine.getName() +
+                                        " in pharmacy " + pharmacy.getName() +
+                                        " has changed.")
+                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                        notificationManager.notify(1, builder.build());
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.e("sendNotification", "Failed to get pharmacy by ID", e);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("sendNotification", "Failed to get medicine by ID", e);
+            }
+        });
+
+
+    }
 
     public void addNotification(String medicineId, String pharmacyId, String userId, OnChangeListener listener) {
         DatabaseReference notificationsRef = databaseReference.child(NOTIFICATIONS_NODE).push();

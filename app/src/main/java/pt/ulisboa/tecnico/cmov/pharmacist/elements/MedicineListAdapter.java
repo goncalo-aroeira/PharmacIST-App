@@ -1,36 +1,32 @@
 package pt.ulisboa.tecnico.cmov.pharmacist.elements;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
-import java.util.Objects;
 
 import pt.ulisboa.tecnico.cmov.pharmacist.R;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 
 public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.MedicineViewHolder> {
+
     private List<Medicine> medicines;
-    private Context context;
+    private final onMedicineClicked listener;
 
-    private OnMedicineItemClickListener listener;
-
-    public interface OnMedicineItemClickListener {
-        void onMedicineClick(Medicine medicine);
+    public MedicineListAdapter(Context context, List<Medicine> medicines, onMedicineClicked listener) {
+        this.medicines = medicines;
+        this.listener = listener;
     }
 
-    public MedicineListAdapter(Context context, List<Medicine> medicines) {
-        this.context = context;
-        this.medicines = medicines;
+    public void updateList(List<Medicine> newList) {
+        medicines = newList;
+        notifyDataSetChanged(); // Notify the adapter to refresh the RecyclerView
     }
 
     @NonNull
@@ -44,40 +40,30 @@ public class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapte
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine medicine = medicines.get(position);
         holder.textViewMedicineName.setText(medicine.getName());
-
-        holder.itemView.setOnClickListener(v -> {
-            listener.onMedicineClick(medicine);
-        });
-
     }
-
 
     @Override
     public int getItemCount() {
         return medicines.size();
     }
 
-    // Method to update the list based on the search filter
-    public void updateList(List<Medicine> newList) {
-        medicines = newList;
-        notifyDataSetChanged();  // Notify the adapter to refresh the RecyclerView
+    public interface onMedicineClicked {
+        void onMedicineSelected(Medicine medicine);
     }
 
-    public static class MedicineViewHolder extends RecyclerView.ViewHolder {
+    public class MedicineViewHolder extends RecyclerView.ViewHolder {
         TextView textViewMedicineName;
 
         public MedicineViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMedicineName = itemView.findViewById(R.id.textViewMedicineName);
-        }
-    }
 
-    public Medicine getMedicinesById(String id) {
-        for (Medicine medicine : medicines) {
-            if (Objects.equals(medicine.getId(), id)) {
-                return medicine;
-            }
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onMedicineSelected(medicines.get(position));
+                }
+            });
         }
-        return null;
     }
 }

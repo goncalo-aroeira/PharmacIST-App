@@ -57,6 +57,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
-
-
+    implementation 'com.google.firebase:firebase-messaging:23.0.0' // Add this line
 }
+
+apply plugin: 'com.google.gms.google-services'

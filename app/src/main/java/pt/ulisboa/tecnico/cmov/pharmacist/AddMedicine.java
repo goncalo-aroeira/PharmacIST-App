@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,14 +21,13 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.journeyapps.barcodescanner.ScanContract;
-import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,33 +38,21 @@ import pt.ulisboa.tecnico.cmov.pharmacist.domain.Medicine;
 import pt.ulisboa.tecnico.cmov.pharmacist.domain.Pharmacy;
 import pt.ulisboa.tecnico.cmov.pharmacist.elements.MedicineListAdapter;
 
-public class AddMedicine extends AppCompatActivity implements MedicineListAdapter.OnMedicineItemClickListener {
+public class AddMedicine extends AppCompatActivity implements MedicineListAdapter.onMedicineClicked {
 
     private EditText searchMedicine;
     private RecyclerView medicineList;
     private MedicineListAdapter adapter;
     private List<Medicine> allMedicines = new ArrayList<>();
     private FirebaseDBHandler firebaseDBHandler;
-
     private Pharmacy pharmacy;
 
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
+    private final ActivityResultLauncher<String> notificationRequestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    scanBarcode();
+                    // FCM SDK (and your app) can post notifications.
                 } else {
-                    Toast.makeText(this, "Permission denied to access camera", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-    private final ActivityResultLauncher<ScanOptions> qrCodeScannerLauncher =
-            registerForActivityResult(new ScanContract(), result -> {
-                if (result.getContents() == null) {
-                    Toast.makeText(this, "No barcode scanned", Toast.LENGTH_SHORT).show();
-                } else {
-                    Log.d("AddMedicine", "qrCodeScannerLauncher: barcode result" + result.getContents());
-                    Toast.makeText(this, "Scanned barcode: " + result.getContents(), Toast.LENGTH_SHORT).show();
-                    handleScannedId(result.getContents());
+                    // TODO: Inform user that that your app will not show notifications.
                 }
             });
 
@@ -77,8 +66,6 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-
 
         firebaseDBHandler = new FirebaseDBHandler();
 
@@ -120,21 +107,18 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
         } else {
             setupViews();
         }
-
     }
 
     private void setupViews() {
         searchMedicine = findViewById(R.id.searchMedicine);
         medicineList = findViewById(R.id.medicineList);
         medicineList.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MedicineListAdapter(this, allMedicines);
+        adapter = new MedicineListAdapter(this, allMedicines, this);
         medicineList.setAdapter(adapter);
 
         loadMedicines();
         setupSearchBar();
     }
-
-
 
     private void loadMedicines() {
         firebaseDBHandler.getAllMedicines(new FirebaseDBHandler.OnMedicinesLoadedListener() {
@@ -181,66 +165,49 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
         adapter.updateList(filteredList); // Ensure your adapter has a method to update its data list
     }
 
-    private void scanBarcode() {
-        ScanOptions options = new ScanOptions();
-        options.setPrompt("Scan a barcode");
-        options.setCameraId(0);
-        options.setBeepEnabled(true);
-        options.setBarcodeImageEnabled(true);
-        options.setOrientationLocked(true);
-
-        qrCodeScannerLauncher.launch(options);
-    }
-
-    private void handleScannedId(String scannedId) {
-        Medicine medicine = adapter.getMedicinesById(scannedId);
-
-        if (medicine != null) {
-            showConfirmDialog(medicine);
-        } else {
-            Toast.makeText(this, "Medicine not found", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
     private void showConfirmDialog(Medicine medicine){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_confirm_quantity, null);
-        builder.setView(dialogView);
+        try {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_confirm_quantity, null);
+            builder.setView(dialogView);
 
-        TextView medicineName = dialogView.findViewById(R.id.medicineName);
-        TextView pharmacyNameTv = dialogView.findViewById(R.id.pharmacyName);
+            TextView medicineName = dialogView.findViewById(R.id.medicineName);
+            TextView pharmacyNameTv = dialogView.findViewById(R.id.pharmacyName);
 
-        Button decreaseButton = dialogView.findViewById(R.id.decreaseButton);
-        Button increaseButton = dialogView.findViewById(R.id.increaseButton);
-        EditText quantityInput = dialogView.findViewById(R.id.quantityInput);
-        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+            Button decreaseButton = dialogView.findViewById(R.id.decreaseButton);
+            Button increaseButton = dialogView.findViewById(R.id.increaseButton);
+            EditText quantityInput = dialogView.findViewById(R.id.quantityInput);
+            Button confirmButton = dialogView.findViewById(R.id.confirmButton);
 
-        medicineName.setText(medicine.getName());
-        pharmacyNameTv.setText(pharmacy.getName());
+            medicineName.setText(medicine.getName());
+            pharmacyNameTv.setText(pharmacy != null ? pharmacy.getName() : "Unknown");
 
-        decreaseButton.setOnClickListener(v -> {
-            int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
-            if (currentQuantity > 0) {
-                quantityInput.setText(String.valueOf(currentQuantity - 1));
-            }
-        });
+            decreaseButton.setOnClickListener(v -> {
+                int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
+                if (currentQuantity > 0) {
+                    quantityInput.setText(String.valueOf(currentQuantity - 1));
+                }
+            });
 
-        increaseButton.setOnClickListener(v -> {
-            int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
-            quantityInput.setText(String.valueOf(currentQuantity + 1));
-        });
+            increaseButton.setOnClickListener(v -> {
+                int currentQuantity = Integer.parseInt(quantityInput.getText().toString());
+                quantityInput.setText(String.valueOf(currentQuantity + 1));
+            });
 
-        AlertDialog dialog = builder.create();
+            AlertDialog dialog = builder.create();
 
-        confirmButton.setOnClickListener(v -> {
-            int quantity = Integer.parseInt(quantityInput.getText().toString());
-            addMedicineToInventory(medicine, quantity);
-            dialog.dismiss();
-        });
+            confirmButton.setOnClickListener(v -> {
+                int quantity = Integer.parseInt(quantityInput.getText().toString());
+                addMedicineToInventory(medicine, quantity);
+                dialog.dismiss();
+            });
 
-        dialog.show();
+            dialog.show();
+        } catch (Exception e) {
+            Log.e("AddMedicine", "Error showing confirm dialog", e);
+            Toast.makeText(this, "Failed to show dialog: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addMedicineToInventory(Medicine medicine, int quantity) {
@@ -248,7 +215,17 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
             @Override
             public void onSuccess() {
                 Toast.makeText(AddMedicine.this, "Medicine added to inventory", Toast.LENGTH_SHORT).show();
+                firebaseDBHandler.checkAndNotifyUser(AddMedicine.this, pharmacy.getId(), medicine.getId(), new FirebaseDBHandler.OnChangeListener() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(AddMedicine.this, "User notified", Toast.LENGTH_SHORT).show();
+                    }
 
+                    @Override
+                    public void onFailure(Exception e) {
+                        Toast.makeText(AddMedicine.this, "Failed to notify user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
@@ -257,6 +234,7 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
             }
         });
     }
+
     private void setLocale(String language) {
         Locale locale = new Locale(language);
         Locale.setDefault(locale);
@@ -274,9 +252,20 @@ public class AddMedicine extends AppCompatActivity implements MedicineListAdapte
         setLocale(language);
     }
 
+    private void askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
+
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                notificationRequestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
 
     @Override
-    public void onMedicineClick(Medicine medicine) {
+    public void onMedicineSelected(Medicine medicine) {
+        Log.d("AddMedicine", "onMedicineSelected: " + medicine.getName());
         showConfirmDialog(medicine);
     }
 }
